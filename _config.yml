@@ -97,7 +97,7 @@ author:
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "NHN ROOKIE 8 HAMA TF"
   location         : "Seoul"
-  email            : ryungjin.kim@nhn.com
+  email            : "ryungjin.kim@nhn.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
