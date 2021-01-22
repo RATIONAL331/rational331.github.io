@@ -273,6 +273,8 @@ defaults:
       author_profile: true
       read_time: true
       comments: true
+      share: false
+      related: false
   # _pages
   - scope:
       path: "_pages"
