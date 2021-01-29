@@ -5,7 +5,7 @@ main:
   - title: "About"
     url: https://rational331.github.io/about/
   - title: "Category"
-  url: "/categories/"
+    url: "/categories/"
   #  title: "Sample Posts"
   #   url: /year-archive/
   # - title: "Sample Collections"
