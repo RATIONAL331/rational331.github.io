@@ -1,4 +1,5 @@
 ---
+layout: post
 title:  "2021 NHN 루키 8기 2주차 소감"
 excerpt: "01.25~01.29까지 소감"
 category: "retrospect"
