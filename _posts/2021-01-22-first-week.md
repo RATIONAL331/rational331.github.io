@@ -3,7 +3,7 @@ title:  "2021 NHN 루키 8기 1주차 소감"
 excerpt: "01.18~01.21까지 소감"
 category: "retrospect"
 
-last_modified_at: 2021-01-21
+last_modified_at: 2021-01-21T
 ---
 
 스프링으로 사전과제를 진행하였다.
