@@ -221,7 +221,7 @@ class OrderService {
 
 [2]: https://www.reactivemanifesto.org/ko
 
-### 리액티브 프로그래밍은 리엑티브 시스템을 만들기에 적합한 좋은 기술입니다.
+### 리액티브 프로그래밍은 리액티브 시스템을 만들기에 적합한 좋은 기술입니다.
 
 * 비동기 데이터 처리
     * 단순한 요청/응답(request-response) 처리
