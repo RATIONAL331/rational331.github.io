@@ -20,7 +20,7 @@ title                    : "Ryung Jin Kim"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Ryung Jin Kim"
-description              : "루키 8기 하마TF"
+description: "NHN Edu"
 url                      : "https://rational331.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : "RATIONAL331/rational331.github.io"
@@ -94,7 +94,7 @@ analytics:
 author:
   name             : "Ryung jin Kim"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "NHN ROOKIE 8 HAMA TF"
+  bio: "NHN Edu"
   location         : "Seoul"
   email		   : "ryungjin.kim@nhn.com"
   links:
