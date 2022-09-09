@@ -3,8 +3,8 @@ permalink: /about/
 title: "About"
 excerpt: "김령진"
 
-last_modified_at: 2021-01-22T
+last_modified_at: 2022-09-10T
 
 ---
 
-김령진 NHN 루키 8기 하마TF
+김령진 NHN Edu
