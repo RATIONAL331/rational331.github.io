@@ -26,7 +26,7 @@ last_modified_at: 2022-09-10T
 
 ### 전통적인 쓰레드 기반 요청 처리
 
-* ![hello_reactive_01_01.png](assets/img/hello_reactive_01/hello_reactive_01_01.png)
+* ![hello_reactive_01_01.png](https://github.com/RATIONAL331/rational331.github.io/blob/master/assets/images/hello_reactive_01/hello_reactive_01_01.png)
 * 시간 당 평균 1000개의 요청을 처리하는 서버가 있다고 가정해봅시다.
 * 톰캣 웹 서버를 실행하고, 500개의 스레드로 톰캣 스레드 풀을 구성했다고 가정합시다.
 * 사용자 평균 응답 시간은 약 250ms 라고 가정합시다.
@@ -42,7 +42,7 @@ last_modified_at: 2022-09-10T
 
 ### 마이크로서비스 & 서버 스케일링(수평 확장)
 
-* ![hello_reactive_01_02.png](assets/img/hello_reactive_01/hello_reactive_01_02.png)
+* ![hello_reactive_01_02.png](https://github.com/RATIONAL331/rational331.github.io/blob/master/assets/images/hello_reactive_01/hello_reactive_01_02.png)
 
 ```java
 
@@ -97,7 +97,7 @@ class OrderService {
 
 ### 이벤트 쓰레드 루프 기반 처리
 
-* ![hello_reactive_01_03.png](assets/img/hello_reactive_01/hello_reactive_01_03.png)
+* ![hello_reactive_01_03.png](https://github.com/RATIONAL331/rational331.github.io/blob/master/assets/images/hello_reactive_01/hello_reactive_01_03.png)
 
 #### 콜백 기반
 
@@ -213,7 +213,7 @@ class OrderService {
 
 ### 강력한 시스템을 구축하기 위한 기본 설계 원칙 [리액티브 메니페스토][2]
 
-* ![hello_reactive_01_04.png](assets/img/hello_reactive_01/hello_reactive_01_04.png)
+* ![hello_reactive_01_04.png](https://github.com/RATIONAL331/rational331.github.io/blob/master/assets/images/hello_reactive_01/hello_reactive_01_04.png)
 
 [2]: https://www.reactivemanifesto.org/ko
 

@@ -74,7 +74,7 @@ Position images with the following classes.
 The image above happens to be **centered**.
 
 ```markdown
-![image-center](/assets/images/filename.jpg){: .align-center}
+![image-center](/assets/img/filename.jpg){: .align-center}
 ```
 
 ---
