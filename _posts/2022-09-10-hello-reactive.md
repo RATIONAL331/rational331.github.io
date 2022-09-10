@@ -30,15 +30,15 @@ last_modified_at: 2022-09-10T
 * 시간 당 평균 1000개의 요청을 처리하는 서버가 있다고 가정해봅시다.
 * 톰캣 웹 서버를 실행하고, 500개의 쓰레드로 톰캣 쓰레드 풀을 구성했다고 가정합시다.
 * 사용자 평균 응답 시간은 약 250ms 라고 가정합시다.
-  * 단순 계산시 초당 약 2000개의 사용자 요청을 처리할 수 있다고 생각할 수 있습니다.
+    * 단순 계산시 초당 약 2000개의 사용자 요청을 처리할 수 있다고 생각할 수 있습니다.
 * 그런데 2000개 보다 많은 사용자의 요청이 오게 되면 어떻게 될까요?
-  * 쓰레드 풀에 사용자 요청을 처리할 쓰레드가 남아 있지 않게 됩니다.
-  * 결과적으로 사용차 요청이 블록킹되고, 응답시간이 증가합니다.
-    * 서비스가 중단됩니다.
-    * 고객이 항의를 합니다.
+    * 쓰레드 풀에 사용자 요청을 처리할 쓰레드가 남아 있지 않게 됩니다.
+    * 결과적으로 사용차 요청이 블록킹되고, 응답시간이 증가합니다.
+        * 서비스가 중단됩니다.
+        * 고객이 항의를 합니다.
 * 우리는 이를 해결하기 위해서 수직 확장 또는 수평 확장을 통해 이를 해결할 수 있습니다.
-  * 수직 확장은 서버의 성능을 향상시키는 방법입니다.
-  * 수평 확장은 서버의 수를 늘려서 서버의 성능을 향상시키는 방법입니다.
+    * 수직 확장은 서버의 성능을 향상시키는 방법입니다.
+    * 수평 확장은 서버의 수를 늘려서 서버의 성능을 향상시키는 방법입니다.
 
 ### 마이크로서비스 & 서버 스케일링(수평 확장)
 
@@ -49,14 +49,14 @@ last_modified_at: 2022-09-10T
 @RequestMapping("/resource")
 @RequiredArgsConstructor
 public class ResourceController {
-  private final RestTemplate restTemplate;
+	private final RestTemplate restTemplate;
 
-  @GetMapping
-  public Example processRequest() {
-    Example example = restTemplate.getObject("something", Example.class); // (1) 다른 마이크로 서비스로 요청을 보냅니다. (이 때 쓰레드가 블록됩니다.)
-    process(example); // (2) 다른 마이크로 서비스에 있는 내용을 받아와서 가공을 하는 로직
-    return example;
-  }
+	@GetMapping
+	public Example processRequest() {
+		Example example = restTemplate.getObject("something", Example.class); // (1) 다른 마이크로 서비스로 요청을 보냅니다. (이 때 쓰레드가 블록됩니다.)
+		process(example); // (2) 다른 마이크로 서비스에 있는 내용을 받아와서 가공을 하는 로직
+		return example;
+	}
 }
 ```
 
@@ -67,17 +67,17 @@ public class ResourceController {
 
 ```java
 interface ShoppingCardService {
-  Output calculate(Input input); // HTTP 요청 또는 DB 쿼리와 같은 시간이 걸리는 I/O 작업이라고 생각해봅시다.
+	Output calculate(Input input); // HTTP 요청 또는 DB 쿼리와 같은 시간이 걸리는 I/O 작업이라고 생각해봅시다.
 }
 
 class OrderService {
-  private final ShoppingCardService shoppingCardService;
+	private final ShoppingCardService shoppingCardService;
 
-  void process() {
-    Input input = new Input();
-    Output output = shoppingCardService.calculate(input); // 이 때 쓰레드가 블록됩니다.
-    something(); // 위의 문장이 끝날 때 까지 기다림
-  }
+	void process() {
+		Input input = new Input();
+		Output output = shoppingCardService.calculate(input); // 이 때 쓰레드가 블록됩니다.
+		something(); // 위의 문장이 끝날 때 까지 기다림
+	}
 }
 ```
 
@@ -103,8 +103,8 @@ class OrderService {
 
 ```javascript
 userRepository.getUser(username, (user) => {
-  let userId = user.getUserId();
-  console.log(userId);
+    let userId = user.getUserId();
+    console.log(userId);
 });
 ```
 
@@ -112,39 +112,39 @@ userRepository.getUser(username, (user) => {
 
 ```java
 interface ShoppingCardService {
-  void calculate(Input input, Consumer<Output> consumer); // 인자가 두개로 바뀌었고, 리턴타입은 void, 콜백을 받는 인자가 추가되었습니다.
+	void calculate(Input input, Consumer<Output> consumer); // 인자가 두개로 바뀌었고, 리턴타입은 void, 콜백을 받는 인자가 추가되었습니다.
 }
 
 class SyncShoppingCardService implements ShoppingCardService {
-  @Override
-  public void calculate(Input input, Consumer<Output> consumer) {
-    // 블록킹 미호출
-    Output output = new Output();
-    consumer.accept(output);
-  }
+	@Override
+	public void calculate(Input input, Consumer<Output> consumer) {
+		// 블록킹 미호출
+		Output output = new Output();
+		consumer.accept(output);
+	}
 }
 
 class AsyncShoppingCardService implements ShoppingCardService {
-  @Override
-  public void calculate(Input input, Consumer<Output> consumer) {
-    new Thread(() -> {
-      // 블록킹 호출
-      Output output = restTemplate.getForObject("...", Output.class);
-      consumer.accept(output);
-    }).start();
-  }
+	@Override
+	public void calculate(Input input, Consumer<Output> consumer) {
+		new Thread(() -> {
+			// 블록킹 호출
+			Output output = restTemplate.getForObject("...", Output.class);
+			consumer.accept(output);
+		}).start();
+	}
 }
 
 class OrderService {
-  private final ShoppingCardService shoppingCardService;
+	private final ShoppingCardService shoppingCardService;
 
-  void process() {
-    Input input = new Input();
-    shoppingCardService.calculate(input, output -> {
-      // ...
-    });
-    something(); // 즉시 수행 됨
-  }
+	void process() {
+		Input input = new Input();
+		shoppingCardService.calculate(input, output -> {
+			// ...
+		});
+		something(); // 즉시 수행 됨
+	}
 }
 ```
 
