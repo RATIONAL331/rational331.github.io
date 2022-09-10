@@ -37,8 +37,8 @@ last_modified_at: 2022-09-10T
     * 서비스가 중단됩니다.
     * 고객이 항의를 합니다.
 * 우리는 이를 해결하기 위해서 수직 확장 또는 수평 확장을 통해 이를 해결할 수 있습니다.
-    * 수직 확장은 서버의 성능을 향상시키는 방법입니다.
-    * 수평 확장은 서버의 수를 늘려서 서버의 성능을 향상시키는 방법입니다.
+  * 수직 확장은 서버의 성능을 향상시키는 방법입니다.
+  * 수평 확장은 서버의 수를 늘려서 서버의 성능을 향상시키는 방법입니다.
 
 ### 마이크로서비스 & 서버 스케일링(수평 확장)
 
@@ -49,14 +49,14 @@ last_modified_at: 2022-09-10T
 @RequestMapping("/resource")
 @RequiredArgsConstructor
 public class ResourceController {
-	private final RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
-	@GetMapping
-    public Example processRequest() {
-      Example example = restTemplate.getObject("something", Example.class); // (1) 다른 마이크로 서비스로 요청을 보냅니다. (이 때 쓰레드가 블록됩니다.)
-      process(example); // (2) 다른 마이크로 서비스에 있는 내용을 받아와서 가공을 하는 로직
-		return example;
-	}
+  @GetMapping
+  public Example processRequest() {
+    Example example = restTemplate.getObject("something", Example.class); // (1) 다른 마이크로 서비스로 요청을 보냅니다. (이 때 쓰레드가 블록됩니다.)
+    process(example); // (2) 다른 마이크로 서비스에 있는 내용을 받아와서 가공을 하는 로직
+    return example;
+  }
 }
 ```
 
@@ -67,17 +67,17 @@ public class ResourceController {
 
 ```java
 interface ShoppingCardService {
-	Output calculate(Input input); // HTTP 요청 또는 DB 쿼리와 같은 시간이 걸리는 I/O 작업이라고 생각해봅시다.
+  Output calculate(Input input); // HTTP 요청 또는 DB 쿼리와 같은 시간이 걸리는 I/O 작업이라고 생각해봅시다.
 }
 
 class OrderService {
-	private final ShoppingCardService shoppingCardService;
+  private final ShoppingCardService shoppingCardService;
 
-	void process() {
-      Input input = new Input();
-      Output output = shoppingCardService.calculate(input); // 이 때 쓰레드가 블록됩니다.
-      something(); // 위의 문장이 끝날 때 까지 기다림
-	}
+  void process() {
+    Input input = new Input();
+    Output output = shoppingCardService.calculate(input); // 이 때 쓰레드가 블록됩니다.
+    something(); // 위의 문장이 끝날 때 까지 기다림
+  }
 }
 ```
 
@@ -140,11 +140,11 @@ class OrderService {
 
   void process() {
     Input input = new Input();
-		shoppingCardService.calculate(input, output -> {
-			// ...
-		});
-		something(); // 즉시 수행 됨
-	}
+    shoppingCardService.calculate(input, output -> {
+      // ...
+    });
+    something(); // 즉시 수행 됨
+  }
 }
 ```
 
