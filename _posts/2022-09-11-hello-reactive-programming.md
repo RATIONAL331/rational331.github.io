@@ -378,4 +378,7 @@ interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
 
 ### JDK9
 
-* 위에서 정의된 모든 인터페이스는(```org.reactivestreams.*```) ```java.util.concurrent.Flow``` 패키지에 정의되어 있습니다.
+* 위에서 정의된 모든 인터페이스는(```org.reactivestreams.*```) ```java.util.concurrent.Flow``` [Flow][5] 패키지에 정의되어 있습니다.
+* 자바9 부터는 표준으로 제공되는 리액티브 스트림을 사용할 수 있습니다.
+
+[5]: https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/Flow.html
