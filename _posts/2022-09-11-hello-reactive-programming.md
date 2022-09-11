@@ -88,7 +88,7 @@ public class SubjectImpl2<T> implements Subject<T> {
 
 * jdk 1.0부터 제공되었던 유구한 역사를 지닌 인터페이스와 클래스입니다.
 * 우선 위 코드처럼 제네릭 형태가 아닌 ```Object``` 타입을 사용하고 있습니다. (타입 안정성 보장 X)
-* 관찰자와 주체 사이에 지원하는 이벤트 모델이 제한적입니다. (결과가 어떻게 바뀌었다는 것은 알려주지만, 기존의 값은 무엇이였고 어떻게 바뀌었다라는 것을 알려주지 못함.)
+* 관찰자와 주체 사이에 지원하는 이벤트 모델이 제한적입니다. (완료 및 에러 신호 전달 등...)
 * 주체가 전달하는 이벤트의 순서를 지정할 수 없습니다.
 
 ## 발행-구독 패턴
@@ -230,7 +230,7 @@ public interface RxObserver<T> {
 ### RxJava 1.x의 Observable, Observer 간의 관계
 
 * ![hello_reactive_02_02.png](/assets/images/hello_reactive_02/hello_reactive_02_02.png)
-* Observable은 0을 포함해 일정 개수의 이벤트를 Observer 에게 보내고 완료 또는 오류를 시그널을 Observer에게 알립니다.
+* Observable은 0~N개의 이벤트를 Observer 에게 보내고 완료 또는 오류를 시그널을 Observer에게 알립니다.
 * 각 Observer 는 onNext()를 여러 번 호출한 다음, onCompleted() 또는 onError()를 호출합니다.
     * 이 때 둘이 동시에 호출되지는 않고, onComplete(), onError()가 호출되고 onNext()가 호출되지 않습니다.
 
@@ -307,7 +307,7 @@ interface Subscription {
 
 * ![hello_reactive_02_03.gif](/assets/images/hello_reactive_02/hello_reactive_02_03.gif)
 * 컨슈머의 부하가 심해져 치명적인 오류가 발생할 수 있습니다.
-* 이러한 경우 직관적인 솔루션은 원소를 큐에 수집하는 것이고, 프로듀서에 둘 수 있고, 컨슈머에 둘 수도 있습니다.
+* 이러한 경우 직관적인 솔루션은 원소를 큐에 수집하는 것이고, 큐는 프로듀서에 둘 수 있고, 컨슈머에 둘 수도 있습니다.
 
 ###### 무제한 큐
 
@@ -326,7 +326,7 @@ interface Subscription {
 
 #### 적합한 제어를 추가하지 않은 순수 푸시 모델은 다양한 부작용이 있다.
 
-* 리액티브 메니페스토에서 배압 제어 메커니즘의 중요성을 언급한 이유
+* 리액티브 메니페스토에서 배압 제어 메커니즘의 중요성을 언급한 이유입니다.
 * RxJava 1.x는 배압을 관리하는 표준화된 기능을 제공하지 않습니다.
     * window, buffer와 같은 연산자가 있지만 모든 서비스가 배치 작업을 지원하지는 않아 적용범위가 제한적입니다.
 
@@ -357,7 +357,7 @@ interface Subscription {
 ```
 
 * ![hello_reactive_02_04.png](/assets/images/hello_reactive_02/hello_reactive_02_04.png)
-* 순수 푸시모델과는 다르게 배압을 적절하게 제어할 수 있습니다.
+* 순수 푸시 모델과는 다르게 배압을 적절하게 제어할 수 있습니다.
 
 #### 사실 하나 더 있습니다.
 
