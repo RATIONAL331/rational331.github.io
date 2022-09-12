@@ -436,9 +436,147 @@ java.lang.ArithmeticException: / by zero
   * onComplete는 출력되지 않습니다.
 
 #### interval
+```java
+class FluxInterval {
+    void interval() {
+        Flux.interval(Duration.ofSeconds(1)) // infinite
+            .subscribe(System.out::println);
+		sleepSeconds(5);
+    }
+}
+```
+* interval 함수는 0부터 명시한 시간동안 1씩 증가하는 값을 발행합니다.
 
 #### from, next
+```java
+class FluxFromNext {
+    void fromNext() {
+        Mono<String> mono = Mono.just("a");
+        Flux<String> from = Flux.from(mono); // mono to flux
+        from.subscribe(System.out::println);
+
+        System.out.println("==============================================================");
+
+        Flux<Integer> range = Flux.range(1, 10);
+        range.next() // flux to mono (first item)
+             .subscribe(System.out::println);
+    }
+}
+```
+* from 함수는 Publisher를 Flux로 반환합니다. (위의 예제에서는 Mono를 Flux로 변환)
+* next 함수는 Flux의 첫번째 요소를 Mono로 반환합니다. (Flux가 비어있는 경우, Mono역시 비어있습니다.)
+  * single 과 유사하지만 single은 반드시 하나가 존재해야하며, 비어있는 Publisher일 경우 에러를 발생시킵니다.
 
 #### subscribeWith
+```java
+class FluxSubscribeWith {
+    void subscribeWith() {
+        AtomicReference<Subscription> subscriptionAtomicReference = new AtomicReference<>();
+        Flux.range(1, 20)
+            .log()
+            .subscribeWith(new Subscriber<Integer>() {
+                // publisher give subscription to subscriber
+                @Override
+                public void onSubscribe(Subscription subscription) {
+                    System.out.println("Receiving subscription: " + subscription);
+                    subscriptionAtomicReference.set(subscription); // subscription을 바깥에서 확인하기 위해 저장
+                }
+
+                @Override
+                public void onNext(Integer integer) {
+                    System.out.println("Receiving next: " + integer);
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    System.out.println("Receiving error: " + throwable);
+                }
+
+                @Override
+                public void onComplete() {
+                    System.out.println("Receiving complete");
+                }
+            });
+        Subscription subscription = subscriptionAtomicReference.get();
+        subscription.request(2);
+        System.out.println("============================================================");
+        sleepSeconds(1);
+        System.out.println("subscription.cancel()");
+        subscription.cancel();
+        System.out.println("============================================================");
+        sleepSeconds(1);
+        subscription.request(1);
+        System.out.println("nothing happen");
+    }
+}
+```
+```text
+[ INFO] (main) | onSubscribe([Synchronous Fuseable] FluxRange.RangeSubscription)
+Receiving subscription: reactor.core.publisher.StrictSubscriber@2eafffde
+[ INFO] (main) | request(2)
+[ INFO] (main) | onNext(1)
+Receiving next: 1
+[ INFO] (main) | onNext(2)
+Receiving next: 2
+============================================================
+subscription.cancel()
+[ INFO] (main) | cancel()
+============================================================
+nothing happen
+```
+* subscribeWith 함수는 Subscriber를 인자로 받아서 처리합니다.
+* 위 예제에서는 Publisher가 전달한 Subscription을 바깥에서 확인할 수 있게끔 하였습니다.
+* subscription.request(2)를 통해 Publisher에게 2개의 요소를 요청하여 전달받았습니다.
+* subscription.cancel()을 통해 Publisher에게 더이상 요소를 요청하지 않겠다고 알렸습니다.
+* subscription.request(1)을 통해 Publisher에게 요소를 요청하였지만, 이미 cancel을 통해 요청을 거부했기 때문에 아무런 동작이 일어나지 않았습니다.
 
 #### Flux vs List
+```java
+class FluxVsList {
+    void fluxVsList() {
+        List<String> names = getNames(5); // 5초 후에 한꺼번에 반환
+        System.out.println(names);
+
+        Flux<String> nameFlux = getNameFlux(5); // 결과가 생성되는대로 반환
+        nameFlux.subscribe(System.out::println);
+    }
+
+    private List<String> getNames(int count) {
+        return IntStream.range(0, count)
+                        .mapToObj(FluxVsList::getName)
+                        .collect(Collectors.toList());
+    }
+
+    private Flux<String> getNameFlux(int count) {
+        return Flux.range(0, count)
+                   .map(FluxVsList::getName);
+    }
+
+    private String getName(long i) {
+        System.out.println("Generate name...");
+        sleepSeconds(1);
+        return "name" + i;
+    }
+}
+```
+```text
+Generate name... (1초에 한번씩)
+Generate name... (1초에 한번씩)
+Generate name... (1초에 한번씩)
+Generate name... (1초에 한번씩)
+Generate name... (1초에 한번씩)
+[name0, name1, name2, name3, name4] (5초에 한꺼번에 반환)
+Generate name... (1초에 한번씩)
+name0 (1초에 한번씩)
+Generate name... (1초에 한번씩)
+name1 (1초에 한번씩)
+Generate name... (1초에 한번씩)
+name2 (1초에 한번씩)
+Generate name... (1초에 한번씩)
+name3 (1초에 한번씩)
+Generate name... (1초에 한번씩)
+name4 (1초에 한번씩)
+```
+
+* Flux의 경우 결과가 생성되는데로 반환합니다.
+* List의 경우에는 생성되는데로 반환하는 것이 아니라, 모든 결과가 생성되면 한꺼번에 반환합니다.
