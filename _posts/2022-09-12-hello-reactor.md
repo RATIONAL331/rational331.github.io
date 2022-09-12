@@ -71,10 +71,10 @@ class MonoSubscribe {
 		System.out.println("==============================");
 
 		// 2. onNext, onError, onComplete
-		Mono<String> ball1 = Mono.just("ball1");
-		ball1.subscribe(item -> System.out.println(item),
-		                err -> System.out.println(err.getMessage()), // no error
-		                () -> System.out.println("completed"));
+		// re-subscribe
+		ball.subscribe(item -> System.out.println(item),
+		               err -> System.out.println(err.getMessage()), // no error
+		               () -> System.out.println("completed"));
 
 		System.out.println("==============================");
 
@@ -108,7 +108,7 @@ class MonoSubscribe {
 ``` text
 ball
 ==============================
-ball1
+ball
 completed
 ==============================
 / by zero
@@ -157,7 +157,7 @@ class MonoFromXXX {
 		System.out.println("==============================");
 		System.out.println("################################");
 		for (int i = 0; i < 5; i++) {
-			getName(); // 단순히 파이프라인만 생성(시간 소요 X)
+			getName(); // 단순히 파이프라인만 생성(시간 소요 매우 짧음)
 		}
 		System.out.println("==============================");
 
@@ -223,7 +223,7 @@ SOMETHING
 
 [1]: https://stackoverflow.com/questions/52215917/callable-vs-supplier-interface-in-java
 
-* fromSupplier, fromCallable은 데이터를 생성하는 시점을 지연시킵니다.
+* ```fromSupplier```, ```fromCallable```은 데이터를 생성하는 시점을 지연시킵니다.
 * 구독이 해야지만 해당 파이프라인 내부를 수행하기 시작합니다. 구독이 이루어지지 않으면 아무런 동작도 하지 않습니다.
 * ```fromFuture```, ```fromRunnable``` 등의 메소드도 있습니다.
     * ```fromFuture```
@@ -283,3 +283,162 @@ public class MonoFromRunnable {
 |    Java     |  ```List<Object>```  |
 | Java Stream | ```Stream<Object>``` |
 |   Reactor   |  ```Flux<Object>```  |
+
+### Flux 예제
+
+#### just
+
+```java
+public class FluxJust {
+	void just() {
+		Flux<String> flux = Flux.just("A", "B", "C");
+		flux.subscribe(item -> System.out.println(item),
+		               err -> System.out.println(err.getMessage()),
+		               () -> System.out.println("Done"));
+	}
+}
+```
+
+* ```Mono```, ```Flux``` 모두 ```Publisher```이기 때문에, 대부분의 메소드는 Mono와 유사한점들이 많다.
+* Mono를 사용하는 이유는 둘 이상의 결과를 기대하지 않는 것이 명확해집니다.
+
+#### 여러 개의 구독자
+
+``` java
+class MultipleSubscriber {
+    void multipleSubscirber() {
+        Flux<Integer> just = Flux.just(1, 2, 3, 4, 5);
+        Flux<Integer> even = just.filter(i -> i % 2 == 0); // filter로 감싸진 publisher 리턴
+        just.subscribe(i -> System.out.println("Subscriber 1: " + i));
+        just.subscribe(i -> System.out.println("Subscriber 2: " + i)); // re-subscribe
+        even.subscribe(i -> System.out.println("Subscriber 3: " + i));
+    }
+}
+```
+
+``` text
+Subscriber 1: 1
+Subscriber 1: 2
+Subscriber 1: 3
+Subscriber 1: 4
+Subscriber 1: 5
+Subscriber 2: 1
+Subscriber 2: 2
+Subscriber 2: 3
+Subscriber 2: 4
+Subscriber 2: 5
+Subscriber 3: 2
+Subscriber 3: 4
+```
+
+* operator를 적용하면 publisher가 변경되는 것이 아닌 새로운 Publisher를 리턴합니다.
+* 구독을 다시 하면 Publisher는 이벤트를 처음부터 다시 발생을 시도합니다.
+
+#### fromStream
+
+``` java
+class FluxFromStream {
+    void fluxFromStream() {
+        List<Integer> integers = List.of(1, 2, 3, 4, 5);
+        Stream<Integer> stream = integers.stream();
+        stream.forEach(System.out::println); // 스트림이 닫힙니다.
+//        stream.forEach(System.out::println); // IllegalStateException: stream has ALREADY been operated upon or closed
+
+        List<Integer> integerList = List.of(1, 2, 3, 4, 5);
+        Stream<Integer> integerStream = integerList.stream();
+        Flux<Integer> integerFlux = Flux.fromStream(integerStream);
+        integerFlux.subscribe(i -> System.out.println("Subscriber 1: " + i)); // stream closed
+//        integerFlux.subscribe(i -> System.out.println("Subscriber 2: " + i)); // IllegalStateException: stream has ALREADY been operated upon or closed
+
+        Flux<Integer> reusableFlux = Flux.fromStream(() -> integerList.stream());
+        reusableFlux.subscribe(i -> System.out.println("Subscriber 1: " + i));
+        reusableFlux.subscribe(i -> System.out.println("Subscriber 2: " + i));
+    }
+}
+```
+
+* ```Stream```의 성질 중 하나는 한번 사용하면 닫힙니다. (재사용 불가)
+* 따라서 ```fromStream(Stream<? extends T> s)``` 를 사용하면 구독하고 나서 s는 재사용 불가합니다.
+* 그러므로 ```fromStream(Supplier<Stream<? extends T>> streamSupplier)``` 를 사용하면 구독할 때마다 새로운 ```Stream```을 생성하므로 재구독에 안전합니다.
+
+#### fromIterable, fromArray
+
+``` java
+class FluxFromXXX {
+    void fluxFromXXX() {
+        List<String> strings = Arrays.asList("a", "b", "c", "d", "e");
+        Flux.fromIterable(strings)
+            .subscribe(System.out::println);
+
+        Integer[] arr = {1, 2, 3, 4, 5};
+        Flux.fromArray(arr)
+            .subscribe(System.out::println);
+    }
+}
+```
+
+#### range
+
+```java
+class FluxRange {
+	void fluxRange() {
+		Flux<Integer> range = Flux.range(3, 5)
+		                          .log();
+
+		range.map(i -> "Received: " + i) // subscribe too
+		     .log()
+		     .subscribe(System.out::println,
+		                System.out::println,
+		                () -> System.out.println("Completed"));
+
+		System.out.println("==============================================================");
+
+		Flux.range(3, 1000)
+		    .map(i -> i / (i - 4)) // 4 divide by 0 and 5 not emit
+		    .subscribe(System.out::println,
+		               System.out::println,
+		               () -> System.out.println("Completed"));
+	}
+}
+```
+``` text
+[ INFO] (main) | onSubscribe([Synchronous Fuseable] FluxRange.RangeSubscription)
+[ INFO] (main) | onSubscribe([Fuseable] FluxMapFuseable.MapFuseableSubscriber)
+[ INFO] (main) | request(unbounded)
+[ INFO] (main) | request(unbounded)
+[ INFO] (main) | onNext(3)
+[ INFO] (main) | onNext(Received: 3)
+Received: 3
+[ INFO] (main) | onNext(4)
+[ INFO] (main) | onNext(Received: 4)
+Received: 4
+[ INFO] (main) | onNext(5)
+[ INFO] (main) | onNext(Received: 5)
+Received: 5
+[ INFO] (main) | onNext(6)
+[ INFO] (main) | onNext(Received: 6)
+Received: 6
+[ INFO] (main) | onNext(7)
+[ INFO] (main) | onNext(Received: 7)
+Received: 7
+[ INFO] (main) | onComplete()
+[ INFO] (main) | onComplete()
+Completed
+==============================================================
+-3
+java.lang.ArithmeticException: / by zero
+```
+
+* range 함수는 (시작값, 개수)를 받습니다.
+  * (3, 5)라면 3, 4, 5, 6, 7을 발행합니다.
+* log 함수는 subscriber가 어떤식으로 처리하고 있는지 보여줍니다.
+* Flux가 발행도중 에러가 발생한다면 에러를 출력하고 종료합니다.
+  * onComplete는 출력되지 않습니다.
+
+#### interval
+
+#### from, next
+
+#### subscribeWith
+
+#### Flux vs List
