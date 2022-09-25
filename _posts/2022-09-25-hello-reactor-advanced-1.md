@@ -11,7 +11,6 @@ last_modified_at: 2022-09-12T
 ## 프로그래밍적으로(programmatically) 데이터를 방출해보기
 
 * generate, create, push는 개발자가 직접 데이터를 방출할 수 있도록 해줍니다.
-*
 
 ### generate
 
