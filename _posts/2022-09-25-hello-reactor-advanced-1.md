@@ -818,7 +818,7 @@ Subscription.request(10) {
                 // 숫자 20이 문자열 "20"로 변환
                 FilterSubscriber(Subscriber).onNext("20") {
                     // 두글자이기 때문에 걸러지지 않음
-                    Subscriber.onNext("20") {...} // 실제 구독자에게 전송
+                    Subscriber.onNext("20") {...} // 다음 구독자에게 전달 (여기에서는 실제 구독자에게 전달)
                 }
             }
         }
