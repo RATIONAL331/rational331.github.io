@@ -671,4 +671,161 @@ class SinkIsNotThreadSafeFix() {
 * sink의 emitNext를 이용하여 삽입 실패시 재시도 하게끔 수정한 코드
 * 실패 signal은 onNext, Sinks.EmitResult는 FAIL_NON_SERIALIZED 입니다.
 
-# 리액터 수명주기
+# 리액티브 스트림 수명 주기
+
+## 조립 단계 (Assembly time)
+
+* 리액터는 복잡한 처리 흐름을 구현할 수 있는 연쇄형(chaining; 체이닝) API를 제공합니다.
+* 마치 빌더 패턴과 유사한데 일반적인 빌더 패턴과는 다르게 불변성(immutability) 입니다.
+* 각각의 연산자가 새로운 객체를 생성합니다.
+
+```java
+class ReactorHasChain {
+	void eachOperatorHasReturn() {
+		// 각각의 연산자들은 새로운 객체를 생성합니다.
+		Flux<Integer> source = Flux.just(1, 20, 300, 4000);
+		Flux<String> mapFlux = source.map(String::valueOf); // 새로운 객체
+		Flux<String> filterFlux = mapFlux.filter(s -> s.length() > 1); // 새로운 객체
+	}
+
+	void reactorHasChain() {
+		// 체이닝 API를 사용하는 경우
+		Flux.just(1, 20, 300, 4000)
+		    .map(String::valueOf) // 새로운 객체
+		    .filter(s -> s.length() > 1) // 새로운 객체
+	}
+}
+
+class ReactorNoChain {
+	void reactorNoChain() {
+		// 체이닝 API 미제공 가정 코드
+		Flux<Integer> source = new FluxJust(1, 20, 300, 4000);
+		Flux<String> mapFlux = new FluxMap(source, String::valueOf);
+		Flux<String> filterFlux = new FluxFilter(mapFlux, s -> s.length() > 1);
+	}
+}
+```
+
+* 만약 체이닝 API를 사용하지 않는다고 생각해봅시다.
+* 위의 코드는 Publisher는 다음과 같이 조립됩니다. (수도 코드)
+
+```text
+FluxFilter(
+    FluxMap(
+        FluxJust(1, 20, 300, 4000),
+    )
+)
+```
+
+* Just -> Map -> Filter 순서로 연산자를 적용하면 Filter -> Map -> Just 순으로 감싸지는 것을 확인할 수 있습니다.
+
+## 구독 단계 (Subscription time)
+
+* 특정 Publisher를 구독(subscribe)하면 발생합니다.
+* 위 조립 단계에서 가장 마지막 단계인 filterFlux를 구독한다고 생각합시다.
+* 구독 단계 동안 Subscriber 체인을 통해 Subscriber가 전파되는 방식을 관찰해봅시다.
+
+```text
+filterFlux.subscribe(new Subscriber) {
+    // 인자에서 전달받은 Subscriber를 FilterSubscriber로 감싸서 전달
+    mapFlux.subscribe(new FilterSubscriber(Subscriber)) {
+        // 인자에서 전달받은 FilterSubscriber(Subscriber)를 MapSubscriber로 감싸서 전달
+        source.subscribe(new MapSubscriber(FilterSubscriber(Subscriber))) {
+            // 인자에서 전달받은 MapSubscriber(FilterSubscriber(Subscriber))를 JustSubscriber로 감쌈
+            // 실제 데이터를 송신하기 시작하는 부분입니다.
+            new JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onSubscribe(...);
+        }
+    }
+}
+```
+
+* 위 수도 코드에서 Subscriber 형태만 살펴봅시다.
+
+```text
+JustSubscriber(
+    MapSubscriber(
+        FilterSubscriber(
+            Subscriber
+        )
+    )
+)
+```
+
+* 조립 단계에서는 Just는 가장 내부에 있었지만 구독 단계에서는 가장 바깥에 존재합니다. (조립 단계와는 역피마리드 형태)
+
+## 런타임(실행) 단계 (Runtime)
+
+* 이 단계에서는 Publisher와 Subscriber 간에 실제 신호가 교환됩니다.
+* 둘 간의 첫 신호는 onSubscribe(), request() 시그널입니다.
+* onSubscribe()가 호출되는 과정을 수도 코드로 살펴봅시다.
+
+```text
+JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onSubscribe(new Subscription()) {
+    // Subscription을 JustSubscription으로 감싸서 전달
+    MapSubscriber(FilterSubscriber(Subscriber)).onSubscribe(new JustSubscription(Subscription)) {
+        // JustSubscription(Subscription)을 MapSubscription으로 감싸서 전달
+        FilterSubscriber(Subscriber).onSubscribe(new MapSubscription(JustSubscription(Subscription))) {
+            // MapSubscription(JustSubscription(Subscription))을 FilterSubscription으로 감싸서 전달
+            Subscriber.onSubscribe(new FilterSubscription(MapSubscription(JustSubscription(Subscription)))) {
+                // 실제 요청 데이터
+            }
+        }
+    }
+}
+```
+
+* 위 수도 코드에서 Subscription 형태만 살펴봅시다.
+
+```text
+FilterSubscription(
+    MapSubscription(
+        JustSubscription(
+            Subscription
+        )
+    )
+)
+```
+
+* 조립 단계와 피라미드 구조가 유사합니다. (구독 단계와는 역피라미드 형태)
+* 이제 실제 데이터를 요청하는 request() 시그널을 살펴봅시다.
+
+```text
+FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) {
+    MapSubscription(JustSubscription(Subscription)).request(10) {
+        JustSubscription(Subscription).request(10) {
+            Subscription.request(10) {
+                // 실제 데이터를 요청
+            }
+        }
+    }
+}
+```
+
+* 실제 Subscriber에게 데이터가 전달되는 과정을 살펴봅시다.
+
+```text
+Subscription.request(10) {
+    JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onNext(...) {
+        JustSubsription(Subscription).request(10) {
+            MapSubscriber(FilterSubscriber(Subscriber)).onNext(1) { // 1, 20, 300, 4000 순으로 onNext()
+                // 숫자 1이 문자열 "1"로 변환
+                FilterSubscriber(Subscriber).onNext("1") {
+                    // 한글자이기 때문에 걸러짐 -> 추가 데이터 요청
+                    MapSubscription(JustSubscription(Subscription)).request(1) {...}
+                }
+            }
+            MapSubscriber(FilterSubscriber(Subscriber)).onNext(20) {
+                // 숫자 20이 문자열 "20"로 변환
+                FilterSubscriber(Subscriber).onNext("20") {
+                    // 두글자이기 때문에 걸러지지 않음
+                    Subscriber.onNext("20") {...} // 실제 구독자에게 전송
+                }
+            }
+        }
+    }
+}
+```
+
+* 데이터는 소스로부터 각 Subscriber 체인을 거쳐 단계마다 다른 기능을 수행하게 됩니다.
+    * MapSubscriber는 데이터를 변환합니다.
+    * FilterSubscriber는 데이터를 걸러냅니다. (걸러내지 않으면 다음 Subscriber에게 전달, 걸러낸다면 추가 요청)
