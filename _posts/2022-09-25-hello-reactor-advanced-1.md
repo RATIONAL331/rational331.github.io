@@ -786,7 +786,7 @@ FilterSubscription(
 ```
 
 * 조립 단계와 피라미드 구조가 유사합니다. (구독 단계와는 역피라미드 형태)
-* 이제 실제 데이터를 요청하는 request() 시그널을 살펴봅시다.
+* 이제 실제 데이터를 요청하는 request() 시그널을 살펴봅시다. (수도 코드)
 
 ```text
 FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) {
@@ -800,7 +800,7 @@ FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) 
 }
 ```
 
-* 실제 Subscriber에게 데이터가 전달되는 과정을 살펴봅시다.
+* 실제 Subscriber에게 데이터가 전달되는 과정을 살펴봅시다. (수도 코드)
 
 ```text
 Subscription.request(10) {
