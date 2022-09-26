@@ -241,7 +241,6 @@ Completed // <- 3개를 온전히 받고 끝남; 파이프라인도 종료 (flux
 * generate와 다르게 take를 사용하여 데이터를 제한한다면 create 안에서 cancel 여부를 직접 확인해야 합니다.
 * Flux.create는 Flux.generate와 다르게 오버플로우 처리를 할 수 있는 인자를 추가로 설정할 수 있습니다.
     * 설정하지 않으면 기본적으로 BUFFER 전략을 사용합니다.
-* fluxSink는 synchronousSink와 다르게 쓰레드 세이프합니다.
 
 ### push
 
@@ -374,7 +373,7 @@ class SinkOne {
 		/**
 		 * subscribe; Received: hi
 		 * subscribe; Completed
-		 * subscribe2; Received: hi // <- 두 개의 구독자 모두에게 데이터가 전달됨
+		 * subscribe2; Received: hi // <- 두번째 구독자에게도 데이터가 전달됨
 		 * subscribe2; Completed
 		 */
 	}
@@ -657,7 +656,7 @@ class SinkIsNotThreadSafeFix() {
 				sink.emitNext("hi" + finalI, (sig, res) -> {
 					System.out.println("emitNext: " + sig + " " + res); // emitNext: onNext FAIL_NON_SERIALIZED
 					return true; // <- [주목!] 재시도 하고 있음
-				}); // retry
+				}); 
 			});
 		}
 
@@ -805,22 +804,20 @@ FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) 
 ```text
 Subscription.request(10) {
     JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onNext(...) {
-        JustSubsription(Subscription).request(10) {
-            MapSubscriber(FilterSubscriber(Subscriber)).onNext(1) { // 1, 20, 300, 4000 순으로 onNext()
-                // 숫자 1이 문자열 "1"로 변환
-                FilterSubscriber(Subscriber).onNext("1") {
-                    // 한글자이기 때문에 걸러짐 -> 추가 데이터 요청
-                    MapSubscription(JustSubscription(Subscription)).request(1) {...}
-                }
-            }
-            MapSubscriber(FilterSubscriber(Subscriber)).onNext(20) {
-                // 숫자 20이 문자열 "20"로 변환
-                FilterSubscriber(Subscriber).onNext("20") {
-                    // 두글자이기 때문에 걸러지지 않음
-                    Subscriber.onNext("20") {...} // 다음 구독자에게 전달 (여기에서는 실제 구독자에게 전달)
-                }
-            }
-        }
+          MapSubscriber(FilterSubscriber(Subscriber)).onNext(1) { // 1, 20, 300, 4000 순으로 onNext()
+              // 숫자 1이 문자열 "1"로 변환
+              FilterSubscriber(Subscriber).onNext("1") {
+                  // 한글자이기 때문에 걸러짐 -> 추가 데이터 요청
+                  MapSubscription(JustSubscription(Subscription)).request(1) {...}
+              }
+          }
+          MapSubscriber(FilterSubscriber(Subscriber)).onNext(20) {
+              // 숫자 20이 문자열 "20"로 변환
+              FilterSubscriber(Subscriber).onNext("20") {
+                  // 두글자이기 때문에 걸러지지 않음
+                  Subscriber.onNext("20") {...} // 다음 구독자에게 전달 (여기에서는 실제 구독자에게 전달)
+              }
+          }
     }
 }
 ```
