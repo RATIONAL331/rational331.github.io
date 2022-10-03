@@ -1,9 +1,9 @@
 ---
 title:  "리액터 살짝만 발을 더 깊이 - 2"
-excerpt: "Hot & Cold 퍼블리셔, 쓰레드 스케쥴링, 배압 관리, 리액터 컨텍스트에 관해서"
+excerpt: "Hot & Cold 퍼블리셔, 쓰레드 스케쥴링에 관해서"
 category: "reactive"
 
-last_modified_at: 2022-09-12T
+last_modified_at: 2022-10-03T
 ---
 
 # Hot & Cold
@@ -989,10 +989,6 @@ class Parallel {
 
 ## interval
 
-* interval은 주기적으로 데이터를 발행하는 Flux를 생성합니다.
-* 해당 Flux는 기본적으로 Scheduler.parallel()에서 동작합니다.
-    * return interval(period, Schedulers.parallel());
-
 ```java
 class Interval {
 	void interval() {
@@ -1025,24 +1021,6 @@ class Interval {
 }
 ```
 
-# Backpressure
-
-## Overflow Strategy
-
-### Drop
-
-### Latest
-
-### Error
-
-### Buffer
-
-# Reactor Context
-
-## ThreadLocal
-
-## contextWrite
-
-## contextUpdate
-
-## Rate Limiting
+* interval은 0부터 주기적으로 1씩 증가하는 데이터를 발행하는 Flux를 생성합니다.
+* 해당 Flux는 기본적으로 Scheduler.parallel()에서 동작합니다.
+    * return interval(period, Schedulers.parallel());
