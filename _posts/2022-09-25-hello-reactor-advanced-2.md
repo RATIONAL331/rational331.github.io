@@ -115,7 +115,8 @@ class HotShare {
 		 * sub1; Received: Scene 3
 		 * sub2; Received: Scene 3 <- notice (1.5초에 생성되는 Scene 3만 전달 받음)
 		 * sub1; Completed
-		 * sub2; Completed <- sub1, sub2 모두 completed 신호를 받고 종료되었습니다.
+		 * sub2; Completed
+         * sub3; Completed <- sub1, sub2, sub3 모두 completed 신호를 받고 종료되었습니다.
 		 */
 
 		Flux<String> movieStream2 = Flux.fromStream(() -> getMovie())
