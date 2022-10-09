@@ -424,10 +424,167 @@ class BackpressureBufferExample {
 
 # Reactor Context
 
+* ![hello_reactor_04_01.png](/assets/images/hello_reactor_04/hello_reactor_04_01.png)
+* 리액터 컨텍스트는 런타임 단계에서 필요한 컨테스트 정보에 엑세스할 수 있도록 하는 기능입니다.
+* 예를 들어 세션키 값을 받아 로그인한 사용자의 정보를 조회하는 경우, 세션키 값을 컨텍스트에 저장하고, 컨텍스트에서 세션키 값을 가져와 사용자 정보를 조회할 수 있습니다.
+
 ## ThreadLocal
+
+* 우리는 위 역할을 하기 위해 ThreadLocal를 떠올릴 법도 합니다.
+* 대부분의 프레임워크는 ThreadLocal에 SecurityContext를 전달하고 사용자의 엑세스가 적절한지 확인합니다.
+* 하지만 ThreadLocal은 단일 스레드를 이용할 때에만 제대로 동작합니다.
+* 비동기 처리 방식을 사용하면 ThreadLocal을 사용할 수 있는 구간이 매우 짧아집니다.
+
+```java
+class ThreadLocalHasProblemOnAsync() {
+	void threadLocal() {
+		ThreadLocal<Map<Object, Object>> threadLocal = new ThreadLocal<>();
+		threadLocal.set(new HashMap<>());
+
+		Flux.range(0, 10)
+		    .doOnNext(i -> threadLocal.get().put(i, new Random(i).nextGaussian())) // <- [주목!] ThreadLocal에 값을 넣고 있습니다. (main 스레드)
+		    .publishOn(Schedulers.parallel()) // <- [주목!] 비동기 처리를 하고 있습니다. 이 다음 downstream에서는 다른 쓰레드에서 수행됩니다.
+		    .map(i -> threadLocal.get().get(i)) // <- [문제 지점!] ThreadLocal에서 값을 꺼내고 있습니다. (ThreadLocal에서 값을 넣은 곳과는 다른 쓰레드에서 수행됩니다.)
+		    .blockLast();
+	}
+}
+```
+
+* 위 코드는 컴파일이 잘 됩니다.
+* publishOn 다음 map에서 NullPointException이 발생합니다.
+    * 메인 쓰레드의 값을 다른 쓰레드에서 사용할 수 없기 때문입니다.
+* 멀티쓰레드 완경에서는 ThreadLocal을 사용은 매우 위험하여 예기치 않은 동작을 할 수 있습니다.
+* ThreadLocal 데이터를 다른 쓰레드로 전송할 수 있지만, 모든 곳에서 일관된 전송을 보장하지 않습니다.
 
 ## contextWrite
 
-## contextUpdate
+```java
+class ContextUsing() {
+	void context() {
+		Flux.range(0, 10)
+		    .flatMap(k -> Mono.deferContextual(ctx -> {
+			    Map<Object, Object> randoms = ctx.get("randoms");
+			    randoms.put(k, new Random(k).nextGaussian());
+			    return Mono.empty();
+		    }).thenReturn(k))
+		    .publishOn(Schedulers.parallel())
+		    .flatMap(k -> Mono.deferContextual(ctx -> {
+			    Map<Object, Object> randoms1 = ctx.get("randoms");
+			    return Mono.just(randoms1.get(k));
+		    }))
+		    .contextWrite(ctx -> ctx.put("randoms", new HashMap<>())) // 마치 쓰레드 로컬 초기화와 같은 역할을 합니다.
+		    .doOnNext(System.out::println)
+		    .blockLast();
+	}
+}
+```
 
-## Rate Limiting
+* deferContextual()를 사용하면 현재 스트림의 Context 인스턴스를 가져올 수 있습니다.
+* contextWrite()를 통해서 해당 스트림 안에서 사용할 Context를 설정할 수 있습니다.
+
+## Context
+
+* Context는 본질적으로 Immutable 객체여서 새로운 요소를 추가하게 되면 Context는 새로운 인스턴스로 변경됩니다.
+    * Context는 스트림의 다른 지점에서 동일한 객체가 아닐 수 있습니다.
+* 구독 단계에서 Subscriber는 Publisher 체인을 따라 위쪽 방향으로 Subscriber가 래핑되는 것을 확인하였습니다.
+* 이 때 추가 Context 객체를 전달하기 위해서 CoreSubscriber라는 특정 인터페이스를 사용합니다.
+
+```java
+interface CoreSubscriber<T> extends Subscriber<T> {
+	default Context currentContext() {
+		return Context.empty();
+	}
+}
+```
+
+* currentContext()를 통해서 현재 Context를 가져올 수 있습니다.
+* 아래 예제에서는 컨텍스트가 추가될 때 마다 새로운 Context 인스턴스로 변경되는 예제입니다.
+
+```java
+class ContextChange {
+	void contextChange() {
+		printCurrentContext("top")
+				.contextWrite(Context.of("top", "context"))
+				.flatMap((x) -> printCurrentContext("middle"))
+				.contextWrite(Context.of("middle", "context"))
+				.flatMap((x) -> printCurrentContext("bottom"))
+				.contextWrite(Context.of("bottom", "context"))
+				.flatMap((x) -> printCurrentContext("init"))
+				.block();
+
+		/**
+		 * top : Context3{bottom=context, middle=context, top=context}
+		 * middle : Context2{bottom=context, middle=context}
+		 * bottom : Context1{bottom=context}
+		 * init : Context0{}
+		 */
+	}
+
+	private Mono<ContextView> printCurrentContext(String id) {
+		return Mono.deferContextual(ctx -> {
+			System.out.println(id + " : " + ctx);
+			return Mono.just(ctx);
+		});
+	}
+}
+```
+
+* 위의 예제에서 보듯이 top 해당 부분에서 사용할 수 있는 Context를 살펴보면 전체 Context가 포함되어있습니다.
+* middle에서는 정의한 컨텍스트와 bottom에서 정의한 컨텍스트가 포함되어있습니다.
+* 가장 마지막에 있는 컨텍스트는 비어있는 것을 확인할 수 있습니다.
+
+### Context authentication example
+
+* 아래 예제에서는 Context를 활용해서 인증을 하는 예제입니다.
+
+```java
+class ContextAuthenticate() {
+	void authenticateExample() {
+		Mono<String> welcomeMessage = getWelcomeMessage(); // 컨텍스트 설정 X
+		Mono<String> welcomeMessageWithContext = getWelcomeMessage().contextWrite(Context.of("user", "sub")); // 컨텍스트 user 설정 O
+
+		welcomeMessage.subscribe(...);
+		System.out.println("===============================");
+		welcomeMessageWithContext.subscribe(...);
+		/**
+		 * subscriber; Error: java.lang.RuntimeException: unauthenticated
+		 * ===============================
+		 * subscriber; Received: Welcome sub
+		 * subscriber; Completed
+		 */
+
+		Mono<String> welcomeMessageWithContext2 = getWelcomeMessage().contextWrite(Context.of("user", "sub1"))
+		                                                             .contextWrite(Context.of("user", "sub2"));
+
+		welcomeMessageWithContext2.subscribe(...);
+
+		/**
+		 * subscriber; Received: Welcome sub1 <- [주목!] 맨 처음에 user2로 설정되었지만, sub1으로 덮어씌워짐
+		 * subscriber; Completed
+		 */
+
+		Mono<String> welcomeMessageWithContext3 = getWelcomeMessage().contextWrite(ctx -> ctx.put("user", ctx.get("user").toString().toUpperCase())) // 컨텍스트 키 수정 
+		                                                             .contextWrite(Context.of("user", "sub2"));
+
+
+		welcomeMessageWithContext3.subscribe(new DefaultSubscriber("subscriber"));
+		/**
+		 * subscriber; Received: Welcome SUB2 <- [주목!] 맨 처음에 user2로 설정되었고, user2가 대문자로 수정됨
+		 * subscriber; Completed
+		 */
+	}
+
+	private Mono<String> getWelcomeMessage() {
+		return Mono.deferContextual(context -> {
+			if (context.hasKey("user")) {
+				return Mono.just("Welcome " + context.get("user"));
+			}
+			return Mono.error(new RuntimeException("unauthenticated"));
+		});
+	}
+}
+```
+
+* Context는 스프링 프레임워크 내에서 광범위하게 사용되며 특히 스프링 시큐리티에서 더욱 많이 사용중 입니다.
+* 리액터의 Context에 대한 자세한 내용은 다음을 살펴보세요
+    * https://projectreactor.io/docs/core/release/reference/#context
