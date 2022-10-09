@@ -425,7 +425,7 @@ class BackpressureBufferExample {
 # Reactor Context
 
 * ![hello_reactor_04_02.png](/assets/images/hello_reactor_04/hello_reactor_04_02.png)
-* 리액터 컨텍스트는 런타임 단계에서 필요한 컨테스트 정보에 엑세스할 수 있도록 하는 기능입니다.
+* 리액터 컨텍스트는 런타임 단계에서 필요한 컨텍스트 정보에 엑세스할 수 있도록 하는 기능입니다.
 * 예를 들어 세션키 값을 받아 로그인한 사용자의 정보를 조회하는 경우, 세션키 값을 컨텍스트에 저장하고, 컨텍스트에서 세션키 값을 가져와 사용자 정보를 조회할 수 있습니다.
 
 ## ThreadLocal
