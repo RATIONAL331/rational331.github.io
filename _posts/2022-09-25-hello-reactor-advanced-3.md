@@ -585,6 +585,6 @@ class ContextAuthenticate() {
 }
 ```
 
-* Context는 스프링 프레임워크 내에서 광범위하게 사용되며 특히 스프링 시큐리티에서 더욱 많이 사용중 입니다.
+* Context는 스프링 프레임워크 내에서 광범위하게 사용되며 특히 스프링 시큐리티에서 더욱 많이 사용중입니다.
 * 리액터의 Context에 대한 자세한 내용은 다음을 살펴보세요
-    * https://projectreactor.io/docs/core/release/reference/#context
+  * https://projectreactor.io/docs/core/release/reference/#context
