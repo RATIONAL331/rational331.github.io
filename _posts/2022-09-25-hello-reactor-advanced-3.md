@@ -96,7 +96,7 @@ class BackpressureDropDefaultExample {
 }
 ```
 
-* onBackpressureLatest()는 기존에 있는 값을 유지하려고합니다.
+* onBackpressureDrop()는 기존에 있는 값을 유지하려고합니다.
     * 데이터가 전달되면 새롭게 전달된 데이터를 버리고 기존 데이터를 유지합니다.
 * 위의 예제를 확인해보면 총 500개의 데이터를 방출하였고 256개의 데이터만 전달 받았습니다.
 * 어느 환경에서든 항상 256개만 전달 받으며 해당 설정은 다음 파일에 설정되어 있습니다.
@@ -432,7 +432,7 @@ class BackpressureBufferExample {
 
 * 우리는 위 역할을 하기 위해 ThreadLocal를 떠올릴 법도 합니다.
 * 대부분의 프레임워크는 ThreadLocal에 SecurityContext를 전달하고 사용자의 엑세스가 적절한지 확인합니다.
-* 하지만 ThreadLocal은 단일 스레드를 이용할 때에만 제대로 동작합니다.
+* 하지만 ThreadLocal은 단일 쓰레드를 이용할 때에만 제대로 동작합니다.
 * 비동기 처리 방식을 사용하면 ThreadLocal을 사용할 수 있는 구간이 매우 짧아집니다.
 
 ```java
@@ -450,11 +450,29 @@ class ThreadLocalHasProblemOnAsync() {
 }
 ```
 
-* 위 코드는 컴파일이 잘 됩니다.
+* 위 코드는 수행이 되지 않습니다.
 * publishOn 다음 map에서 NullPointException이 발생합니다.
     * 메인 쓰레드의 값을 다른 쓰레드에서 사용할 수 없기 때문입니다.
-* 멀티쓰레드 완경에서는 ThreadLocal을 사용은 매우 위험하여 예기치 않은 동작을 할 수 있습니다.
-* ThreadLocal 데이터를 다른 쓰레드로 전송할 수 있지만, 모든 곳에서 일관된 전송을 보장하지 않습니다.
+* 멀티쓰레드 환경에서는 ThreadLocal의 사용은 매우 위험하여 예기치 않은 동작을 할 수 있습니다.
+* ThreadLocal 데이터를 다른 쓰레드로 전송할 수 있지만, 일관된 전송을 보장하지 않습니다.
+
+## Context
+
+* Context는 본질적으로 Immutable 객체여서 새로운 요소를 추가하게 되면 Context는 새로운 인스턴스로 변경됩니다.
+    * Context는 스트림의 다른 지점에서 동일한 객체가 아닐 수 있습니다.
+* 구독 단계에서 Subscriber는 Publisher 체인을 따라 위쪽 방향으로 Subscriber가 감싸지는 것을 확인하였습니다.
+* 이 때 Context 객체를 전달하기 위해서 CoreSubscriber라는 특정 인터페이스를 사용합니다.
+
+```java
+interface CoreSubscriber<T> extends Subscriber<T> {
+	default Context currentContext() {
+		return Context.empty();
+	}
+}
+```
+
+* currentContext()를 통해서 현재 Context를 가져올 수 있습니다.
+* 아래 예제에서는 컨텍스트가 추가될 때 마다 새로운 Context 인스턴스로 변경되는 예제입니다.
 
 ## contextWrite
 
@@ -478,27 +496,9 @@ class ContextUsing() {
 	}
 }
 ```
-
+* 위 예제는 정상적으로 수행됩니다.
 * deferContextual()를 사용하면 현재 스트림의 Context 인스턴스를 가져올 수 있습니다.
 * contextWrite()를 통해서 해당 스트림 안에서 사용할 Context를 설정할 수 있습니다.
-
-## Context
-
-* Context는 본질적으로 Immutable 객체여서 새로운 요소를 추가하게 되면 Context는 새로운 인스턴스로 변경됩니다.
-    * Context는 스트림의 다른 지점에서 동일한 객체가 아닐 수 있습니다.
-* 구독 단계에서 Subscriber는 Publisher 체인을 따라 위쪽 방향으로 Subscriber가 래핑되는 것을 확인하였습니다.
-* 이 때 추가 Context 객체를 전달하기 위해서 CoreSubscriber라는 특정 인터페이스를 사용합니다.
-
-```java
-interface CoreSubscriber<T> extends Subscriber<T> {
-	default Context currentContext() {
-		return Context.empty();
-	}
-}
-```
-
-* currentContext()를 통해서 현재 Context를 가져올 수 있습니다.
-* 아래 예제에서는 컨텍스트가 추가될 때 마다 새로운 Context 인스턴스로 변경되는 예제입니다.
 
 ```java
 class ContextChange {
