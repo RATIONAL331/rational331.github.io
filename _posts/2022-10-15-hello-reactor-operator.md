@@ -21,6 +21,7 @@ last_modified_at: 2022-10-16T
 * map체이닝이 많아지면 동기 함수를 여러번 적용하여 오버헤드가 발생할 수 있습니다.
 * map을 여러개 사용하면 IDE에서 알려줍니다.
 * map을 여러번 사용하는 대신 flatMap을 사용하는 것이 좋습니다.
+  * https://youtu.be/I0zMm6wIbRI?t=1074 (NHN Forward 2020 - NHN GLOBAL 김병부 수석님)
 * ![hello_reactor_05_01.png](/assets/images/hello_reactor_05/hello_reactor_05_01.png)
 
 ## flatMap
@@ -38,7 +39,7 @@ last_modified_at: 2022-10-16T
 ## concatMap
 
 * flatMapSequential과 유사하여 원래 순서를 유지합니다. (끼워넣기 허용 안함)
-* flatMap, flatMapSequential과 결정적으로 다른 부분은 하나의 데이터가 완전히 처리될 때 까지 기다립니다.
+* flatMap, flatMapSequential과 결정적으로 다른 부분은 하나의 데이터가 완전히 처리될 때 까지 기다립니다. (속도면에서 불리합니다.)
   * flatMap, flatMapSequential은 하나의 데이터가 완전히 처리되지 않아도 다음 데이터를 처리합니다. (eagerly subscribing)
   * concatMap은 첫번째 데이터가 완전히 처리되어 complete 시그널이 도착해야 그 다음 두번째 데이터가 방출되어 처리되기 시작합니다. (순차 변환)
   * flatMapSequential은 순서를 유지하기 위하여 내부적으로 큐를 사용했지만, concatMap은 그럴 필요가 없습니다.
