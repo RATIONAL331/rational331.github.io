@@ -32,16 +32,16 @@ last_modified_at: 2022-10-16T
 ## flatMapSequential
 
 * flatMap과 유사하나 끼워넣기가 허용되지 않습니다.
-    * 따라서 원래 순서를 유지합니다.
-    * 순서를 유지하기 위하여 내부적으로 큐를 사용하여 역순으로 유지합니다.
+  * 따라서 원래 순서를 유지합니다.
+  * 순서를 유지하기 위하여 내부적으로 큐를 사용합니다.
 
 ## concatMap
 
 * flatMapSequential과 유사하여 원래 순서를 유지합니다. (끼워넣기 허용 안함)
 * flatMap, flatMapSequential과 결정적으로 다른 부분은 하나의 데이터가 완전히 처리될 때 까지 기다립니다.
-    * flatMap, flatMapSequential은 하나의 데이터가 완전히 처리되지 않아도 다음 데이터를 처리합니다. (eagerly subscribing)
-    * concatMap은 첫번째 데이터가 완전히 처리되어 complete 시그널이 도착해야 그 다음 두번째 데이터가 방출되어 처리되기 시작합니다.
-    * flatMapSequential은 순서를 유지하기 위하여 내부적으로 큐를 사용했지만, concatMap은 그럴 필요가 없습니다.
+  * flatMap, flatMapSequential은 하나의 데이터가 완전히 처리되지 않아도 다음 데이터를 처리합니다. (eagerly subscribing)
+  * concatMap은 첫번째 데이터가 완전히 처리되어 complete 시그널이 도착해야 그 다음 두번째 데이터가 방출되어 처리되기 시작합니다. (순차 변환)
+  * flatMapSequential은 순서를 유지하기 위하여 내부적으로 큐를 사용했지만, concatMap은 그럴 필요가 없습니다.
 
 ```java
 class FlatConcatMap {
@@ -55,9 +55,9 @@ class FlatConcatMap {
 		 * main - Executing 1
 		 * main - Done 1
 		 * main - Executing 2
-		 * main - Executing 3
-		 * main - Done 3
-		 * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다..
+         * main - Executing 3
+         * main - Done 3 // 3이 먼저 나오게 됨(순서 보장X)
+         * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다..
 		 */
 
 		Flux.just(1, 2, 3)
@@ -70,41 +70,47 @@ class FlatConcatMap {
 		 * main - Done 1
 		 * main - Executing 2
 		 * main - Executing 3
-		 * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다.
-		 * parallel-1 - Done 3 
-		 */
+         * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다.
+         * parallel-1 - Done 3 // 3은 2다음 나옴(순서 보장)
+         */
 
-		Flux.just(1, 2, 3)
-		    .concatMap(this::doSomethingAsync)
-		    .doOnNext(n -> log.info("Done {}", n))
-		    .blockLast();
+      Flux.just(1, 2, 3)
+          .concatMap(this::doSomethingAsync)
+          .doOnNext(n -> log.info("Done {}", n))
+          .blockLast();
 
-		/**
-		 * main - Executing 1
-		 * main - Done 1
-		 * main - Executing 2
-		 * parallel-1 - Done 2 // 2번이 끝나야 3번이 방출됩니다.
-		 * parallel-1 - Executing 3
-		 * parallel-1 - Done 3 
-		 */
+      /**
+       * main - Executing 1
+       * main - Done 1
+       * main - Executing 2
+       * parallel-1 - Done 2 // 2번이 끝나야 
+       * parallel-1 - Executing 3 // 3번이 방출됩니다.
+       * parallel-1 - Done 3 
+       */
 
-	}
+    }
 
-	private Mono<Integer> doSomethingAsync(Integer number) {
-		// 두번째 아이템은 1초 지연되어 방출됩니다.
-		return number == 2 ? Mono.just(number).doOnNext(n -> log.info("Executing {}", n)).delayElement(Duration.ofSeconds(1))
-				: Mono.just(number).doOnNext(n -> log.info("Executing {}", n));
-	}
+  private Mono<Integer> doSomethingAsync(Integer number) {
+    // 두번째 아이템은 1초 지연되어 방출됩니다.
+    return number == 2 ? Mono.just(number).doOnNext(n -> log.info("Executing {}", n)).delayElement(Duration.ofSeconds(1))
+            : Mono.just(number).doOnNext(n -> log.info("Executing {}", n));
+  }
 }
 ```
 
 ## switchMap
 
-* 데이터가 방출할 될때마다 기존 변환을 취소하고 그 다음 데이터를 퍼블리셔로 변환합니다.
+* 데이터가 방출될 될때마다 기존 변환을 취소하고 그 다음 데이터를 퍼블리셔로 변환합니다.
 * 항상 마지막 데이터는 온전하게 처리되는 것을 보장해야할 때 사용할 수 있습니다.
 * switchMap이 적절한 예제를 다음 주소에서 확인할 수 있습니다.
-    * https://medium.com/@elizabethveprik/rxjava-flatmap-vs-switchmap-85cd7e2c791c
-    * 기존 데이터 변환에 더 이상 신경쓰지 않아야 하는 상황에서 유용하게 사용할 수 있습니다.
+  * https://medium.com/@elizabethveprik/rxjava-flatmap-vs-switchmap-85cd7e2c791c
+  * 기존 데이터 변환에 더 이상 신경쓰지 않아야 하는 상황에서 유용하게 사용할 수 있습니다.
+* 또 다른 예제로 포털사이트에서 검색하는 시나리오가 있습니다.
+* ![hello_reactor_05_01.png](/assets/images/hello_reactor_05/hello_reactor_05_01.png)
+* 검색어를 입력하면 검색어를 포함하는 데이터를 검색하는 API를 호출합니다.
+* 이 때 어떤 한 응답이 늦게 도착하는 상황이라면 어떻게 될까요?
+  * 엉뚱한 결과가 리스트에 늦게 반영이 될 수 있습니다.
+  * 해당 현상을 막기 위해 switchMap을 사용할 수 있습니다.
 
 ```java
 class SwitchMap {
@@ -406,10 +412,204 @@ class Delay {
 
 ## startWith
 
+* 퍼블리셔가 데이터를 방출하기 전에 데이터를 추가합니다.
+
+```java
+class StartWith {
+  public startWith() {
+    Flux<String> flux = Flux.just("a", "b", "c")
+                            .delayElements(Duration.ofMillis(500));
+
+    Flux.just("a2", "b2", "c2")
+        .startWith(flux)
+        .subscribe(System.out::println);
+
+    /**
+     * a
+     * b
+     * c
+     * a2
+     * b2
+     * c2
+     */
+
+    sleepSeconds(2);
+  }
+}
+```
+
+* startWith는 Iterable, T..., Publisher를 인자로 받을 수 있습니다.
+* Publisher로 인자로 받을 때에는, 인자로 넘어온 Publisher가 데이터를 모두 방출하고 나서야 데이터를 방출합니다.
+
 ## concat
+
+* 퍼블리셔를 구독한 다음 완료될 때 까지 기다린 후 완료되면 그 다음 퍼블리셔를 순차적으로 구독하여 연결합니다.
+  * 따라서 무한의 퍼블리셔가 concat 앞에 존재하면 그 다음 퍼블리셔가 구독이 되지 않습니다.
+
+```java
+class Concat {
+  public concat() {
+    Flux<Long> just = Flux.just(-1L, -2L, -3L);
+    Flux.interval(Duration.ofMillis(500)) // interval은 인자로 넘긴 시간 간격으로 0부터 1씩 증가하는 데이터를 방출합니다.
+        .concatWith(just) // concatWith는 해당 인자를 다음 퍼블리셔로 연결합니다.
+        .subscribe(s -> System.out.println("Received: " + s));
+    sleepSeconds(5);
+
+    /**
+     * Received: 0
+     * Received: 1
+     * Received: 2
+     * Received: 3
+     * Received: 4 
+     * ... // -1, -2, -3은 절대로 못나옴
+     */
+
+    Flux<String> pub1 = Flux.just("a", "b", "c");
+    Flux<String> pub2 = Flux.just("d", "e", "f");
+    Flux<String> error = Flux.error(new RuntimeException());
+
+    Flux<String> stringFlux = Flux.concat(pub1, pub2, error);
+
+    stringFlux.subscribe(...);
+
+    /**
+     * subscriber1; Received: a
+     * subscriber1; Received: b
+     * subscriber1; Received: c
+     * subscriber1; Received: d
+     * subscriber1; Received: e
+     * subscriber1; Received: f
+     * subscriber1; Error: java.lang.RuntimeException
+     */
+
+    Flux<String> stringFlux2 = Flux.concat(pub1, error, pub2); // 에러가 중간에 발생하면 그 다음 퍼블리셔는 구독되지 않습니다.
+    stringFlux2.subscribe(...);
+    /**
+     * subscriber2; Received: a
+     * subscriber2; Received: b
+     * subscriber2; Received: c
+     * subscriber2; Error: java.lang.RuntimeException
+     */
+
+    Flux<String> stringFlux3 = Flux.concatDelayError(pub1, error, pub2); // 에러가 발생해도 그 다음 퍼블리셔를 구독합니다. (에러를 늦춤)
+    stringFlux3.subscribe(...);
+
+    /**
+     * subscriber3; Received: a
+     * subscriber3; Received: b
+     * subscriber3; Received: c
+     * subscriber3; Received: d <- [주목!] 에러가 발생해도 그 다음 퍼블리셔를 구독합니다.
+     * subscriber3; Received: e
+     * subscriber3; Received: f
+     * subscriber3; Error: java.lang.RuntimeException
+     */
+  }
+}
+```
+
+* concat, concatWith는 Publisher를 순차적으로 연결합니다.
+  * 이 때 각각의 구독이 완료되고 나서야 그 다음 퍼블리셔를 순차적으로 구독합니다.
+  * 에러가 발생하면 그 다음 퍼블리셔는 구독되지 않습니다.
+  * concatDelayError는 에러가 발생해도 그 다음 퍼블리셔를 구독합니다.
 
 ## merge
 
+* concat과 유사하나 가장 크게 다른 점은 각각의 구독자를 모두 구독합니다. (eagerly subscribe)
+  * concat은 구독자가 각각의 구독을 완료하고 나서야 다음 퍼블리셔를 순차적으로 구독합니다.
+
+```java
+class Merge {
+  void merge() {
+    Flux<Long> just = Flux.just(-1L, -2L, -3L);
+    Flux.interval(Duration.ofMillis(500)) // interval은 인자로 넘긴 시간 간격으로 0부터 1씩 증가하는 데이터를 방출합니다.
+        .mergeWith(just) // concat -> merge로만 바뀌었습니다.
+        .subscribe(s -> System.out.println("Received: " + s));
+    sleepSeconds(5);
+  }
+
+  /**
+   * Received: -1
+   * Received: -2
+   * Received: -3
+   * Received: 0 // 500ms 후에 나오기 때문에 이 전에 -1, -2, -3이 먼저 나옵니다.
+   * Received: 1
+   * Received: 2
+   * Received: 3
+   * Received: 4 
+   * ...
+   */
+}
+```
+
 ## zip
 
+* 여러개의 Publisher를 하나로 합쳐서 하나의 Publisher로 만듭니다.
+  * 각각의 Publisher가 방출하는 데이터를 하나로 합쳐서 방출합니다.
+  * 각각의 Publisher가 방출하는 데이터의 개수가 다르면 더 적은 데이터를 가진 Publisher가 방출하는 데이터의 개수만큼만 방출합니다.
+
+```java
+class Zip {
+  void zip() {
+    Flux.zip(getBody(), getTire(), getEngine())
+        .subscribe(...); // 총 2개의 데이터를 방출합니다.
+
+    sleepSeconds(10);
+
+    private static Flux<String> getBody () {
+      return Flux.range(1, 5).delayElements(Duration.ofMillis(500)).map(i -> "body" + i);
+    }
+
+    private static Flux<String> getEngine () {
+      return Flux.range(1, 2).delayElements(Duration.ofMillis(1000)).map(i -> "engine" + i);
+    }
+
+    private static Flux<String> getTire () {
+      return Flux.range(1, 6).delayElements(Duration.ofMillis(1500)).map(i -> "tire" + i);
+    }
+  }
+  /**
+   * subscriber; Received: [body1,tire1,engine1]
+   * subscriber; Received: [body2,tire2,engine2]
+   * subscriber; Completed
+   */
+}
+```
+
 ## combineLatest
+
+* 여러개의 Publisher를 하나로 합쳐서 하나의 Publisher로 만든다는 면에서 zip과 유사합니다.
+* zip과 다른 점은 zip은 각각의 Publisher가 방출하는 데이터를 하나로 합쳐서 방출하지만 combineLatest는 각각의 Publisher가 방출하는 데이터 중 가장 최근에 방출한 데이터를 하나로
+  합쳐서 방출합니다.
+* 또한 zip은 최소의 데이터 개수를 가진 Publisher가 방출하는 데이터의 개수만큼만 방출하지만 combineLatest는 그렇지 않습니다.
+
+```java
+class Zip {
+  void zip() {
+    Flux.combineLatest(getBody(), getTire(), getEngine(), (all) -> all[0].toString() + all[1].toString() + all[2].toString())
+        .subscribe(...);
+
+    sleepSeconds(5);
+
+    private static Flux<String> getBody () {
+      return Flux.range(1, 5).delayElements(Duration.ofMillis(500)).map(i -> "body" + i);
+    }
+
+    private static Flux<String> getEngine () {
+      return Flux.range(1, 2).delayElements(Duration.ofMillis(1000)).map(i -> "engine" + i);
+    }
+
+    private static Flux<String> getTire () {
+      return Flux.range(1, 6).delayElements(Duration.ofMillis(1500)).map(i -> "tire" + i);
+    }
+  }
+  /**
+   * subscriber; Received: body2tire1engine1 // 1500ms
+   * subscriber; Received: body3tire1engine1 // 1500ms
+   * subscriber; Received: body3tire1engine2 // 2000ms
+   * subscriber; Received: body4tire1engine2 // 2000ms
+   * subscriber; Received: body5tire1engine2 // 2500ms
+   * subscriber; Received: body5tire2engine2 // 3000ms
+   * subscriber; Received: body5tire3engine2 // 4500ms
+   */
+}
+```
