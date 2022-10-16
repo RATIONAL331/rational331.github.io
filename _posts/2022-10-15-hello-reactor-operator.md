@@ -1,6 +1,6 @@
 ---
 title:  "리액터 연산자들"
-excerpt: "연산자 그리고 퍼블리셔 합쳐보기"
+excerpt: "연산자들, 퍼블리셔 합쳐보기, 모아서 처리하기, 다시 시도하기"
 category: "reactive"
 
 last_modified_at: 2022-10-16T
@@ -19,9 +19,8 @@ last_modified_at: 2022-10-16T
 
 * 각각의 데이터에 동기 함수를 적용하여 각각의 데이터를 변환합니다.
 * map체이닝이 많아지면 동기 함수를 여러번 적용하여 오버헤드가 발생할 수 있습니다.
-* map을 여러개 사용하면 IDE에서 알려줍니다.
 * map을 여러번 사용하는 대신 flatMap을 사용하는 것이 좋습니다.
-  * https://youtu.be/I0zMm6wIbRI?t=1074 (NHN Forward 2020 - NHN GLOBAL 김병부 수석님)
+  * https://youtu.be/I0zMm6wIbRI?t=1074 (NHN Forward 2020 - 김병부 수석님)
 * ![hello_reactor_05_01.png](/assets/images/hello_reactor_05/hello_reactor_05_01.png)
 
 ## flatMap
@@ -46,50 +45,50 @@ last_modified_at: 2022-10-16T
 
 ```java
 class FlatConcatMap {
-	void flatConcatMap() {
-		Flux.just(1, 2, 3)
-		    .flatMap(this::doSomethingAsync)
-		    .doOnNext(n -> log.info("Done {}", n))
-		    .blockLast();
+  void flatConcatMap() {
+    Flux.just(1, 2, 3)
+        .flatMap(this::doSomethingAsync)
+        .doOnNext(n -> log.info("Done {}", n))
+        .blockLast();
 
-		/**
-		 * main - Executing 1
-		 * main - Done 1
-		 * main - Executing 2
-         * main - Executing 3
-         * main - Done 3 // 3이 먼저 나오게 됨(순서 보장X)
-         * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다..
-		 */
+    /**
+     * main - Executing 1
+     * main - Done 1
+     * main - Executing 2
+     * main - Executing 3
+     * main - Done 3 // 3이 먼저 나오게 됨(순서 보장X)
+     * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다.
+     */
 
-		Flux.just(1, 2, 3)
-		    .flatMapSequential(this::doSomethingAsync)
-		    .doOnNext(n -> log.info("Done {}", n))
-		    .blockLast();
+    Flux.just(1, 2, 3)
+        .flatMapSequential(this::doSomethingAsync)
+        .doOnNext(n -> log.info("Done {}", n))
+        .blockLast();
 
-		/**
-		 * main - Executing 1
-		 * main - Done 1
-		 * main - Executing 2
-		 * main - Executing 3
-         * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다.
-         * parallel-1 - Done 3 // 3은 2다음 나옴(순서 보장)
-         */
+    /**
+     * main - Executing 1
+     * main - Done 1
+     * main - Executing 2
+     * main - Executing 3
+     * parallel-1 - Done 2 // delayElement를 사용하게 되면 다른 쓰레드로 수행되게 전환됩니다.
+     * parallel-1 - Done 3 // 3은 2다음 나옴(순서 보장)
+     */
 
-      Flux.just(1, 2, 3)
-          .concatMap(this::doSomethingAsync)
-          .doOnNext(n -> log.info("Done {}", n))
-          .blockLast();
+    Flux.just(1, 2, 3)
+        .concatMap(this::doSomethingAsync)
+        .doOnNext(n -> log.info("Done {}", n))
+        .blockLast();
 
-      /**
-       * main - Executing 1
-       * main - Done 1
-       * main - Executing 2
-       * parallel-1 - Done 2 // 2번이 끝나야 
-       * parallel-1 - Executing 3 // 3번이 방출됩니다.
-       * parallel-1 - Done 3 
-       */
+    /**
+     * main - Executing 1
+     * main - Done 1
+     * main - Executing 2
+     * parallel-1 - Done 2 // 2번이 끝나야 
+     * parallel-1 - Executing 3 // 3번이 방출됩니다.
+     * parallel-1 - Done 3 
+     */
 
-    }
+  }
 
   private Mono<Integer> doSomethingAsync(Integer number) {
     // 두번째 아이템은 1초 지연되어 방출됩니다.
@@ -614,3 +613,181 @@ class Zip {
    */
 }
 ```
+
+# 모아서 처리하기(배치)
+
+* Publisher가 방출하는 데이터를 모아서 처리하는 방법에 대해 알아봅니다.
+
+## buffer
+
+* ![hello_reactor_05_03.png](/assets/images/hello_reactor_05/hello_reactor_05_03.png)
+* buffer는 Publisher가 방출하는 데이터를 모아서 List로 만들어서 방출합니다. (Flux<List<T>>)
+
+```java
+class FluxBuffer {
+  void fluxBuffer() {
+    Flux.interval(Duration.ofMillis(300)) // 300ms마다 0부터 1씩 증가하는 데이터를 방출
+        .map(i -> "event" + i)
+        .buffer(5) // 5개씩 모아서 List로 만듬
+        .subscribe(...);
+
+    /**
+     * subscriber; Received: [event0, event1, event2, event3, event4]
+     * subscriber; Received: [event5, event6, event7, event8, event9]
+     * ...
+     */
+
+    Flux.interval(Duration.ofMillis(10))
+        .map(i -> "event" + i)
+        .buffer(Duration.ofSeconds(2)) // 2초 동안 모아서 List로 만듬
+        .subscribe(...);
+
+    /**
+     * subscriber2; Received: [event0, event1, event2, event3, event4....] // 2초 동안 모인 데이터
+     * subscriber2; Received: [event199, event200, event201...]
+     */
+
+    Flux.interval(Duration.ofMillis(800))
+        .map(i -> "event" + i)
+        .bufferTimeout(5, Duration.ofSeconds(2)) // 5개를 모았거나, 5개 못 모았더라도 2초가 지나면 List로 만듬
+        .subscribe(...);
+
+    /**
+     * subscriber3; Received: [event0, event1, event2]
+     * ...
+     */
+
+    Flux.interval(Duration.ofMillis(300))
+        .map(i -> "event" + i)
+        .buffer(3, 1) // 1개씩 삭제하면서 3개 단위로 모음
+        //.buffer(3)은 buffer(3, 3)과 같습니다.
+        .subscribe(...);
+
+    /**
+     * subscriber4; Received: [event0, event1, event2]
+     * subscriber4; Received: [event1, event2, event3] <- [주목!] 1개씩 삭제하면서 모음
+     * subscriber4; Received: [event2, event3, event4] <- [주목!] 1개씩 삭제하면서 모음
+     */
+
+    Flux.interval(Duration.ofMillis(300))
+        .map(i -> "event" + i)
+        .buffer(3, 2) // 2개씩 삭제하면서 3개 단위로 모음
+        .subscribe(...);
+
+    /**
+     * subscriber5; Received: [event0, event1, event2]
+     * subscriber5; Received: [event2, event3, event4] <- [주목!] 2개씩 삭제하면서 모음
+     */
+  }
+}
+```
+
+* buffer는 size만큼 모으거나, 시간 단위로 모아서 처리할 수 있습니다.
+* bufferTimeout은 갯수 또는 시간을 둘다 적용하여 모아서 처리할 수 있습니다.
+* buffer(size, skip)은 size만큼 모아서 처리하고, skip만큼 삭제하면서 처리합니다.
+  * 그래서 buffer(n)은 buffer(n, n)과 같습니다.
+  * skip이 size보다 더 크면 초과 이벤트를 버립니다. (dropping buffer)
+  * 예를들어 buffer(3, 5)는 3개씩 모아서 처리하고, 5개씩 삭제하면서 처리합니다. (초과 2개의 이벤트가 버려짐)
+
+```text
+Received: [event0, event1, event2]
+Received: [event5, event6, event7] <- 3, 4는 버려짐
+```
+
+## window
+
+* ![hello_reactor_05_04.png](/assets/images/hello_reactor_05/hello_reactor_05_04.png)
+* Publisher를 여러개의 Publisher로 쪼갭니다. (Flux<Flux<T>>)
+
+```java
+class FluxWindow {
+  private static final AtomicInteger counter = new AtomicInteger(0);
+
+  void fluxWindow() {
+    Flux.interval(Duration.ofMillis(300))
+        .map(i -> "event" + i)
+        .window(5) // Flux<Flux<String>>
+        .subscribe(...);
+    /**
+     * subscriber; Received: UnicastProcessor // Flux<String>을 그대로 출력할 때 UnicastProcessor가 출력됨
+     * subscriber; Received: UnicastProcessor
+     */
+
+
+    Flux.interval(Duration.ofMillis(300))
+        .map(i -> "event" + i)
+        .window(5)
+        .flatMap(flux -> flux.doOnNext(event -> System.out.println("Received: " + event)) // Flux<String>을 안의 내용을 보기 위해 doOnNext로 출력
+                             .doOnComplete(() -> System.out.println("Completed==========="))
+                             .then(Mono.just(counter.getAndIncrement())))
+        .subscribe(...);
+
+    /**
+     * Received: event0
+     * Received: event1
+     * Received: event2
+     * Received: event3
+     * Received: event4
+     * Completed===========
+     * subscriber2; Received: 0
+     * Received: event5
+     * Received: event6
+     * Received: event7
+     * Received: event8
+     * Received: event9
+     * Completed===========
+     * subscriber2; Received: 1
+     * Received: event10
+     * Received: event11
+     * Received: event12
+     * Received: event13
+     * Received: event14
+     * Completed===========
+     * subscriber2; Received: 2
+     * Received: event15
+     * Received: event16
+     * ...
+     */
+  }
+}
+```
+
+## group
+
+* ![hello_reactor_05_05.png](/assets/images/hello_reactor_05/hello_reactor_05_05.png)
+* Publisher를 특정 조건에 따라 여러개의 Publisher로 쪼갭니다. (Flux<GroupedFlux<K, T>>)
+  * GroupedFlux<K, V>는 Flux<V>를 상속받고 있습니다.
+    * 그래서 GroupedFlux<K, V>를 Flux<V>로 취급할 수 있습니다.
+    * K는 쪼개지는 기준이 되는 값입니다.
+
+```java
+class FluxGroup {
+  void fluxGroup() {
+    Flux.range(1, 30)
+        .delayElements(Duration.ofMillis(200))
+        .groupBy(b -> b % 2 == 0) // Flux<GroupedFlux<Boolean, Integer>>
+        .subscribe(groupFlux -> process(groupFlux, groupFlux.key()));
+  }
+
+  /**
+   * process
+   * false: 1
+   * process <- [주목!] process가 총 두번(false, true) 출력됩니다.
+   * true: 2
+   * false: 3
+   * true: 4
+   * false: 5
+   * true: 6
+   * false: 7
+   * true: 8
+   */
+
+  // GroupedFlux<Boolean, Integer>를 Flux<Integer>로 취급할 수 있습니다.
+  private static void process(Flux<Integer> flux, boolean key) {
+    System.out.println("process");
+    flux.subscribe(str -> System.out.println(key + ": " + str));
+  }
+}
+```
+
+# 다시 시도하기
