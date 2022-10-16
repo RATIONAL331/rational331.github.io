@@ -107,7 +107,7 @@ class FlatConcatMap {
   * https://medium.com/@elizabethveprik/rxjava-flatmap-vs-switchmap-85cd7e2c791c
   * 기존 데이터 변환에 더 이상 신경쓰지 않아야 하는 상황에서 유용하게 사용할 수 있습니다.
 * 또 다른 예제로 포털사이트에서 검색하는 시나리오가 있습니다.
-* ![hello_reactor_05_01.png](/assets/images/hello_reactor_05/hello_reactor_05_02.png)
+* ![hello_reactor_05_02.png](/assets/images/hello_reactor_05/hello_reactor_05_02.png)
 * 검색어를 입력하면 검색어를 포함하는 데이터를 검색하는 API를 호출합니다.
 * 이 때 어떤 한 응답이 늦게 도착하는 상황이라면 어떻게 될까요?
   * 엉뚱한 결과가 리스트에 늦게 반영이 될 수 있습니다.
