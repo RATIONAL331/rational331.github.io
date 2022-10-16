@@ -791,3 +791,184 @@ class FluxGroup {
 ```
 
 # 다시 시도하기
+
+## Repeat
+
+* 명시적으로 다시 구독합니다.
+
+```java
+class Repeat {
+  void repeat() {
+    Flux.range(1, 3)
+        .doOnSubscribe(sub -> System.out.println("subscribe"))
+        .doOnComplete(() -> System.out.println("complete"))
+        .repeat(2) // 명시적으로 2번 더 반복
+        .subscribe(new DefaultSubscriber("subscriber"));
+
+    /**
+     * subscribe
+     * subscriber; Received: 1
+     * subscriber; Received: 2
+     * subscriber; Received: 3
+     * complete
+     * subscribe <- [주목!] subscribe부터 다시
+     * subscriber; Received: 1
+     * subscriber; Received: 2
+     * subscriber; Received: 3
+     * complete
+     * subscribe
+     * subscriber; Received: 1
+     * subscriber; Received: 2
+     * subscriber; Received: 3
+     * complete
+     * subscriber; Completed
+     */
+  }
+}
+```
+
+## Retry
+
+* 에러가 발생했을 시 다시 구독합니다.
+
+```java
+class Retry {
+  void retry() {
+    Flux.range(1, 3)
+        .doOnSubscribe(sub -> System.out.println("subscribe"))
+        .doOnComplete(() -> System.out.println("complete"))
+        .map(i -> i / (i - 2))
+        .doOnError(err -> System.out.println("ERR: " + err))
+        .retry(2) // 에러가 발생했을 때 최대 2번 재시도
+        .subscribe(new DefaultSubscriber("subscriber"));
+
+    /**
+     * subscribe
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscribe
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscribe
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscriber; Error: java.lang.ArithmeticException: / by zero
+     */
+  }
+}
+```
+
+## RetryWhen
+
+* Retry 스펙을 좀 더 세밀하게 조정할 수 있습니다.
+
+```java
+  class RetryWhen {
+  void retryWhen() {
+    Flux.range(1, 3)
+        .doOnSubscribe(sub -> System.out.println("subscribe"))
+        .doOnComplete(() -> System.out.println("complete"))
+        .map(i -> i / (i - 2))
+        .doOnError(err -> System.out.println("ERR: " + err))
+        // 에러가 발생하였을 때 최대 2번, 1초 후에 재시도
+        .retryWhen(Retry.fixedDelay(2, Duration.ofSeconds(1))) // Retry 스펙 인자로 넘김
+        .subscribe(new DefaultSubscriber("subscriber"));
+
+    /**
+     * subscribe
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscribe <- retry 1 second
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscribe
+     * subscriber; Received: -1
+     * ERR: java.lang.ArithmeticException: / by zero
+     * subscriber; Error: reactor.core.Exceptions$RetryExhaustedException: Retries exhausted: 2/2
+     */
+  }
+}
+```
+
+* RetryWhen을 좀 더 세밀하게 조절한 예제를 살펴봅시다.
+
+```java
+class RetryExample {
+  void retryExample() {
+    Mono.fromSupplier(() -> {
+          processPayment(new Random().nextInt() * 1000); // 0 ~ 799는 500에러, 800 ~ 999는 404에러, 1000 ~ 4999는 정상
+          return new Random().nextDouble();
+        })
+        .doOnError(err -> System.out.println("ERR: " + err))
+        .retryWhen(Retry.from(flux -> flux.doOnNext(rs -> {
+                                            System.out.println("totalRetries: " + rs.totalRetries());
+                                            System.out.println("failure: " + rs.failure());
+                                          })
+                                          .handle((rs, sink) -> {
+                                            if (rs.failure().getMessage().startsWith("500")) {
+                                              sink.next(1); // 아무값이나 리턴하면 재시도
+                                            } else {
+                                              sink.error(rs.failure()); // 에러를 리턴하면 더 이상 재시도 안함
+                                            }
+                                          })
+                                          .delayElements(Duration.ofSeconds(1)))) // 1초 딜레이 (1초 후 재시도)
+        .subscribe(new DefaultSubscriber("subscribe"));
+  }
+
+  private static void processPayment(int cardNumber) {
+    if (cardNumber < 800) {
+      throw new RuntimeException("500");
+    } else if (cardNumber < 1000) {
+      throw new RuntimeException("404");
+    }
+  }
+}
+```
+
+* 위의 결과로 나올 수 있는 것 중 하나씩 살펴봅시다.
+
+```java
+        /**
+ * subscribe; Received: 0.3620607420415294 <- 바로 성공
+ * subscribe; Completed
+ */
+
+/**
+ * ERR: java.lang.RuntimeException: 404 <- 바로 404 나와서 그대로 실패
+ * totalRetries: 0
+ * failure: java.lang.RuntimeException: 404
+ * subscribe; Error: java.lang.RuntimeException: 404
+ */
+
+/**
+ * ERR: java.lang.RuntimeException: 500 <- 500 나와서 재시도
+ * totalRetries: 0
+ * failure: java.lang.RuntimeException: 500
+ * subscribe; Received: 0.3620607420415294 <- 그 다음 성공
+ * subscribe; Completed
+ */
+
+/**
+ * ERR: java.lang.RuntimeException: 500 <- 500 나와서 재시도
+ * totalRetries: 0
+ * failure: java.lang.RuntimeException: 500
+ * ERR: java.lang.RuntimeException: 500 <- 500 나와서 재시도
+ * totalRetries: 1
+ * failure: java.lang.RuntimeException: 500
+ * subscribe; Received: 0.3620607420415294 <- 그 다음 성공
+ * subscribe; Completed
+ */
+
+/**
+ * ERR: java.lang.RuntimeException: 500 <- 500 나와서 재시도
+ * totalRetries: 0
+ * failure: java.lang.RuntimeException: 500
+ * ERR: java.lang.RuntimeException: 500 <- 500 나와서 재시도
+ * totalRetries: 1
+ * failure: java.lang.RuntimeException: 500
+ * ERR: java.lang.RuntimeException: 404 <- 404 나와서 그대로 실패
+ * totalRetries: 2
+ * failure: java.lang.RuntimeException: 404
+ * subscribe; Error: java.lang.RuntimeException: 404
+ */
+```
