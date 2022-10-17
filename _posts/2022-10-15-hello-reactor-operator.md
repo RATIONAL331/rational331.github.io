@@ -621,7 +621,7 @@ class Zip {
 ## buffer
 
 * ![hello_reactor_05_03.png](/assets/images/hello_reactor_05/hello_reactor_05_03.png)
-* buffer는 Publisher가 방출하는 데이터를 모아서 List로 만들어서 방출합니다. (Flux<List<T>>)
+* buffer는 Publisher가 방출하는 데이터를 모아서 List로 만들어서 방출합니다. (`Flux<List<T>>`)
 
 ```java
 class FluxBuffer {
@@ -697,7 +697,7 @@ Received: [event5, event6, event7] <- 3, 4는 버려짐
 ## window
 
 * ![hello_reactor_05_04.png](/assets/images/hello_reactor_05/hello_reactor_05_04.png)
-* Publisher를 여러개의 Publisher로 쪼갭니다. (Flux<Flux<T>>)
+* Publisher를 여러개의 Publisher로 쪼갭니다. (`Flux<Flux<T>>`)
 
 ```java
 class FluxWindow {
@@ -756,8 +756,8 @@ class FluxWindow {
 
 * ![hello_reactor_05_05.png](/assets/images/hello_reactor_05/hello_reactor_05_05.png)
 * Publisher를 특정 조건에 따라 여러개의 Publisher로 쪼갭니다. (Flux<GroupedFlux<K, T>>)
-  * GroupedFlux<K, V>는 Flux<V>를 상속받고 있습니다.
-    * 그래서 GroupedFlux<K, V>를 Flux<V>로 취급할 수 있습니다.
+  * `GroupedFlux<K, V>`는 `Flux<V>`를 상속받고 있습니다.
+    * 그래서 `GroupedFlux<K, V>`를 `Flux<V>`로 취급할 수 있습니다.
     * K는 쪼개지는 기준이 되는 값입니다.
 
 ```java
