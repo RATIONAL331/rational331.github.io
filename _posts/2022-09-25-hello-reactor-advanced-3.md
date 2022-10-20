@@ -9,10 +9,10 @@ last_modified_at: 2022-10-15T
 # Backpressure
 
 * ![hello_reactor_04_01.png](/assets/images/hello_reactor_04/hello_reactor_04_01.png)
-* 위 그림은 Subscriber가 처리할 수 있는 속도보다 Publisher가 더 빠르게 데이터를 전달하는 상황입니다.
-* Publisher는 Subscriber에게 모두 데이터를 전달할 수는 있을까요?
+* 위 그림은 `Subscriber`가 처리할 수 있는 속도보다 `Publisher`가 더 빠르게 데이터를 전달하는 상황입니다.
+* `Publisher`는 `Subscriber`에게 모두 데이터를 전달할 수는 있을까요?
 * 모두 전달하게 하려면 어떻게 해야할까요?
-    * 무제한 큐를 활용해야 할 것이지만 현실적으로 이러한 방법은 활용할 수 없습니다.
+  * 무제한 큐를 활용해야 할 것이지만 현실적으로 이러한 방법은 활용할 수 없습니다.
 * 모두 전달할 수 없다면 어떠한 방식으로 처리해야할까요?
 
 ## Overflow Strategy
@@ -49,11 +49,11 @@ class BackpressureExample {
 }
 ```
 
-* 기본적으로 리액터는 위와 같은 상황에서 Buffer 전략을 기본적으로 사용하게 됩니다.
-* Buffer 전략은 Subscriber가 데이터를 느리게 소비할 동안 다음 전달할 내용을 버퍼(메모리)에 저장해둡니다.
-    * 이 때 오버플로우가 발생하였을 때 기본 전략은 최신 발행된 데이터를 버립니다.
-* Backpressure 전략은 Buffer만 있지 않고 다른 것도 존재합니다.
-    * https://itsallbinary.com/reactor-basics-with-example-backpressure-overflow-drop-error-latest-ignore-buffer-good-for-beginners/
+* 기본적으로 리액터는 위와 같은 상황에서 `Buffer` 전략을 기본적으로 사용하게 됩니다.
+* `Buffer` 전략은 `Subscriber`가 데이터를 느리게 소비할 동안 다음 전달할 내용을 버퍼(메모리)에 저장해둡니다.
+  * 이 때 오버플로우가 발생하였을 때 기본 전략은 최신 발행된 데이터를 버립니다.
+* `Backpressure` 전략은 `Buffer`만 있지 않고 다른 것도 존재합니다.
+  * https://itsallbinary.com/reactor-basics-with-example-backpressure-overflow-drop-error-latest-ignore-buffer-good-for-beginners/
 
 |   전략   |            행동            |
 |:------:|:------------------------:|
@@ -96,12 +96,12 @@ class BackpressureDropDefaultExample {
 }
 ```
 
-* onBackpressureDrop()는 기존에 있는 값을 유지하려고합니다.
-    * 데이터가 전달되면 새롭게 전달된 데이터를 버리고 기존 데이터를 유지합니다.
+* `onBackpressureDrop()`는 기존에 있는 값을 유지하려고합니다.
+  * 데이터가 전달되면 새롭게 전달된 데이터를 버리고 기존 데이터를 유지합니다.
 * 위의 예제를 확인해보면 총 500개의 데이터를 방출하였고 256개의 데이터만 전달 받았습니다.
 * 어느 환경에서든 항상 256개만 전달 받으며 해당 설정은 다음 파일에 설정되어 있습니다.
-    * reactor.util.concurrent.Queues#SMALL_BUFFER_SIZE
-    * 위에서 기본값으로 256이 설정되어있습니다.
+  * `reactor.util.concurrent.Queues#SMALL_BUFFER_SIZE`
+  * 위에서 기본값으로 256이 설정되어있습니다.
 
 ```java
 class BackpressureDropExample {
@@ -194,8 +194,8 @@ class BackpressureDropExample {
 * 버퍼 사이즈를 16으로 설정하였고 데이터를 전달할 때 구독자의 10배 빠른속도로 데이터를 전합니다.
 * 버퍼 사이즈의 75%를 전달 받고 그 다음 데이터의 전달 데이터를 버퍼안에 있는 모든 내용이 나오고 난 뒤 보이는 것을 확인할 수 있습니다.
 * replenishing optimization[1]에 대한 정보를 찾아보시면 좋습니다.
-    * https://beer1.tistory.com/18
-* onBackpressureDrop()에서 버려지는 원소에 대한 정의를 추가할 수 있습니다.
+  * https://beer1.tistory.com/18
+* `onBackpressureDrop()`에서 버려지는 원소에 대한 정의를 추가할 수 있습니다.
 
 [1]: https://projectreactor.io/docs/core/release/reference/#_on_backpressure_and_ways_to_reshape_requests
 
@@ -257,8 +257,8 @@ class BackpressureLatestExample {
 }
 ```
 
-* onBackpressureLatest()는 최신의 값을 유지하려고합니다.
-    * 데이터가 전달되면 기존에 오래된 데이터를 버리고 새로운 데이터를 취하려 합니다.
+* `onBackpressureLatest()`는 최신의 값을 유지하려고합니다.
+  * 데이터가 전달되면 기존에 오래된 데이터를 버리고 새로운 데이터를 취하려 합니다.
 
 ### Error
 
@@ -332,8 +332,8 @@ class BackpressureErrorExample {
 }
 ```
 
-* onBackpressureError()는 더 이상 큐 사이즈가 충분하지 않으면 에러를 발생시킵니다.
-    * 이 때 cancel 신호가 전달되기 때문에, 데이터 전달할 때 isCancelled()을 확인해야 합니다.
+* `onBackpressureError()`는 더 이상 큐 사이즈가 충분하지 않으면 에러를 발생시킵니다.
+  * 이 때 cancel 신호가 전달되기 때문에, 데이터 전달할 때 `isCancelled()`을 확인해야 합니다.
 
 ### Buffer
 
@@ -415,12 +415,12 @@ class BackpressureBufferExample {
 }
 ```
 
-* Buffer전략은 Flux.create의 기본전략입니다.
-* onBackpressureBuffer()로 명시적으로 버퍼 사이즈를 지정할 수 있습니다.
-    * 명시적으로 버퍼 사이즈를 지정하면, 버퍼 오버 플로우 발생시 에러가 발생하게 됩니다.
-    * 버퍼 사이즈를 지정하지 않았을 때에는 버퍼 오버 플로우 발생시 에러가 발생하지 않습니다.
-    * 버퍼 사이즈를 지정하면서, 버퍼 오버 플로우에 대한 전략을 설정할 수 있습니다.
-* Flux.create를 호출할 때 명시적으로 backpressure 전략을 지정할 수 있습니다.
+* `Buffer`전략은 `Flux.create`의 기본전략입니다.
+* `onBackpressureBuffer()`로 명시적으로 버퍼 사이즈를 지정할 수 있습니다.
+  * 명시적으로 버퍼 사이즈를 지정하면, 버퍼 오버 플로우 발생시 에러가 발생하게 됩니다.
+  * 버퍼 사이즈를 지정하지 않았을 때에는 버퍼 오버 플로우 발생시 에러가 발생하지 않습니다.
+  * 버퍼 사이즈를 지정하면서, 버퍼 오버 플로우에 대한 전략을 설정할 수 있습니다.
+* `Flux.create`를 호출할 때 명시적으로 `backpressure` 전략을 지정할 수 있습니다.
 
 # Reactor Context
 
@@ -430,10 +430,10 @@ class BackpressureBufferExample {
 
 ## ThreadLocal
 
-* 우리는 위 역할을 하기 위해 ThreadLocal를 떠올릴 법도 합니다.
-* 대부분의 프레임워크는 ThreadLocal에 SecurityContext를 전달하고 사용자의 엑세스가 적절한지 확인합니다.
-* 하지만 ThreadLocal은 단일 쓰레드를 이용할 때에만 제대로 동작합니다.
-* 비동기 처리 방식을 사용하면 ThreadLocal을 사용할 수 있는 구간이 매우 짧아집니다.
+* 우리는 위 역할을 하기 위해 `ThreadLocal`를 떠올릴 법도 합니다.
+* 대부분의 프레임워크는 `ThreadLocal`에 `SecurityContext`를 전달하고 사용자의 엑세스가 적절한지 확인합니다.
+* 하지만 `ThreadLocal`은 단일 쓰레드를 이용할 때에만 제대로 동작합니다.
+* 비동기 처리 방식을 사용하면 `ThreadLocal`을 사용할 수 있는 구간이 매우 짧아집니다.
 
 ```java
 class ThreadLocalHasProblemOnAsync() {
@@ -451,17 +451,17 @@ class ThreadLocalHasProblemOnAsync() {
 ```
 
 * 위 코드는 수행이 되지 않습니다.
-* publishOn 다음 map에서 NullPointException이 발생합니다.
-    * 메인 쓰레드의 값을 다른 쓰레드에서 사용할 수 없기 때문입니다.
-* 멀티쓰레드 환경에서는 ThreadLocal의 사용은 매우 위험하여 예기치 않은 동작을 할 수 있습니다.
-* ThreadLocal 데이터를 다른 쓰레드로 전송할 수 있지만, 일관된 전송을 보장하지 않습니다.
+* `publishOn` 다음 `map`에서 `NullPointException`이 발생합니다.
+  * 메인 쓰레드의 값을 다른 쓰레드에서 사용할 수 없기 때문입니다.
+* 멀티쓰레드 환경에서는 `ThreadLocal`의 사용은 매우 위험하여 예기치 않은 동작을 할 수 있습니다.
+* `ThreadLocal` 데이터를 다른 쓰레드로 전송할 수 있지만, 일관된 전송을 보장하지 않습니다.
 
 ## Context
 
-* Context는 본질적으로 Immutable 객체여서 새로운 요소를 추가하게 되면 Context는 새로운 인스턴스로 변경됩니다.
-    * Context는 스트림의 다른 지점에서 동일한 객체가 아닐 수 있습니다.
-* 구독 단계에서 Subscriber는 Publisher 체인을 따라 위쪽 방향으로 Subscriber가 감싸지는 것을 확인하였습니다.
-* 이 때 Context 객체를 전달하기 위해서 CoreSubscriber라는 특정 인터페이스를 사용합니다.
+* `Context`는 본질적으로 Immutable 객체여서 새로운 요소를 추가하게 되면 `Context`는 새로운 인스턴스로 변경됩니다.
+  * `Context`는 스트림의 다른 지점에서 동일한 객체가 아닐 수 있습니다.
+* 구독 단계에서 `Subscriber`는 `Publisher` 체인을 따라 위쪽 방향으로 `Subscriber`가 감싸지는 것을 확인하였습니다.
+* 이 때 `Context` 객체를 전달하기 위해서 `CoreSubscriber`라는 특정 인터페이스를 사용합니다.
 
 ```java
 interface CoreSubscriber<T> extends Subscriber<T> {
@@ -471,8 +471,8 @@ interface CoreSubscriber<T> extends Subscriber<T> {
 }
 ```
 
-* currentContext()를 통해서 현재 Context를 가져올 수 있습니다.
-* 아래 예제에서는 컨텍스트가 추가될 때 마다 새로운 Context 인스턴스로 변경되는 예제입니다.
+* `currentContext()`를 통해서 현재 `Context`를 가져올 수 있습니다.
+* 아래 예제에서는 컨텍스트가 추가될 때 마다 새로운 `Context` 인스턴스로 변경되는 예제입니다.
 
 ## contextWrite
 
@@ -496,9 +496,10 @@ class ContextUsing() {
 	}
 }
 ```
+
 * 위 예제는 정상적으로 수행됩니다.
-* deferContextual()를 사용하면 현재 스트림의 Context 인스턴스를 가져올 수 있습니다.
-* contextWrite()를 통해서 해당 스트림 안에서 사용할 Context를 설정할 수 있습니다.
+* `deferContextual()`를 사용하면 현재 스트림의 `Context` 인스턴스를 가져올 수 있습니다.
+* `contextWrite()`를 통해서 해당 스트림 안에서 사용할 `Context`를 설정할 수 있습니다.
 
 ```java
 class ContextChange {
@@ -529,13 +530,13 @@ class ContextChange {
 }
 ```
 
-* 위의 예제에서 보듯이 top 해당 부분에서 사용할 수 있는 Context를 살펴보면 전체 Context가 포함되어있습니다.
+* 위의 예제에서 보듯이 top 해당 부분에서 사용할 수 있는 `Context`를 살펴보면 전체 `Context`가 포함되어있습니다.
 * middle에서는 정의한 컨텍스트와 bottom에서 정의한 컨텍스트가 포함되어있습니다.
 * 가장 마지막에 있는 컨텍스트는 비어있는 것을 확인할 수 있습니다.
 
 ### Context authentication example
 
-* 아래 예제에서는 Context를 활용해서 인증을 하는 예제입니다.
+* 아래 예제에서는 `Context`를 활용해서 인증을 하는 예제입니다.
 
 ```java
 class ContextAuthenticate() {
@@ -585,6 +586,6 @@ class ContextAuthenticate() {
 }
 ```
 
-* Context는 스프링 프레임워크 내에서 광범위하게 사용되며 특히 스프링 시큐리티에서 더욱 많이 사용중입니다.
-* 리액터의 Context에 대한 자세한 내용은 다음을 살펴보세요
+* `Context`는 스프링 프레임워크 내에서 광범위하게 사용되며 특히 스프링 시큐리티에서 더욱 많이 사용중입니다.
+* 리액터의 `Context`에 대한 자세한 내용은 다음을 살펴보세요
   * https://projectreactor.io/docs/core/release/reference/#context

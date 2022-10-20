@@ -15,7 +15,7 @@ last_modified_at: 2022-09-11T
 ### 뜬금없이 갑자기 패턴?
 
 * 리액티브 프로그래밍을 설명하기 전에 GoF 디자인 패턴 중 하나인 옵저버 패턴에 대해 간단히 설명하고 넘어가겠습니다.
-* 관찰자 패턴은 관찰자(Observer)라고 불리는 자손의 리스트를 가지고 있는 주체(Subject)가 있고, 주체는 자신의 메서드 중 하나를 호출하여 관찰자에게 상태 변경을 알립니다.
+* 관찰자 패턴은 관찰자(`Observer`)라고 불리는 자손의 리스트를 가지고 있는 주체(`Subject`)가 있고, 주체는 자신의 메서드 중 하나를 호출하여 관찰자에게 상태 변경을 알립니다.
 * 이벤트 처리를 기반으로 시스템을 구현할 때 필수적이며, 대부분의 UI 라이브러리가 내부적으로 이 패턴을 자주 사용합니다.
 
 ```java
@@ -56,8 +56,8 @@ public class SubjectImpl<T> implements Subject<T> {
 }
 ```
 
-* 만약에 ```notifyObservers```를 호출할 때 ```observe```라는 함수를 수행하는데 오래 걸린다면 어떻게 될까요?
-* 구독자가 적으면 문제가 안되겠지만, 구독자가 많아지면 많아질수록 ```notifyObservers```를 한번 호출하면 너무 많은 시간이 소요될 것입니다.
+* 만약에 `notifyObservers`를 호출할 때 `observe`라는 함수를 수행하는데 오래 걸린다면 어떻게 될까요?
+* 구독자가 적으면 문제가 안되겠지만, 구독자가 많아지면 많아질수록 `notifyObservers`를 한번 호출하면 너무 많은 시간이 소요될 것입니다.
 
 ```java
 public class SubjectImpl2<T> implements Subject<T> {
@@ -77,7 +77,7 @@ public class SubjectImpl2<T> implements Subject<T> {
 ```
 
 * 여러분이 쓰레드 풀 크기를 깜빡하고 지정하지 않는다면 어떻게 될까요?
-    * OutOfMemoryError 발생
+  * `OutOfMemoryError` 발생
 * 쓰레드 풀 크기를 지정하였다고 한들, 쓰레드 풀 크기보다 더 많은 관찰자가 있으면 어떻게 될까요?
 
 ### jdk.util.Observable is [deprecated][2], jdk.util.Observer is [deprecated][3]
@@ -87,7 +87,7 @@ public class SubjectImpl2<T> implements Subject<T> {
 [3]: https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Observer.html
 
 * jdk 1.0부터 제공되었던 유구한 역사를 지닌 인터페이스와 클래스입니다.
-* 우선 위 코드처럼 제네릭 형태가 아닌 ```Object``` 타입을 사용하고 있습니다. (타입 안정성 보장 X)
+* 우선 위 코드처럼 제네릭 형태가 아닌 `Object` 타입을 사용하고 있습니다. (타입 안정성 보장 X)
 * 관찰자와 주체 사이에 지원하는 이벤트 모델이 제한적입니다. (완료 및 에러 신호 전달 등...)
 * 주체가 전달하는 이벤트의 순서를 지정할 수 없습니다.
 
@@ -181,7 +181,7 @@ eventSource.onerror = (event) => {
 * 큰 단점은 해당 접근 방식이 스프링 프레임워크의 내부 메커니즘을 활용합니다.
     * 스프링 컨텍스트를 로드하지 않고 비즈니스 로직 단위 테스트는 어렵습니다.
     * 드문 경우로 프레임워크의 변경이 발생하면 코드를 수정해야 합니다.
-    * 또한 @EventListener 어노테이션에서 종료 시그널, 에러 시그널을 알리기 위한 별도의 처리가 어렵습니다.
+    * 또한 `@EventListener` 어노테이션에서 종료 시그널, 에러 시그널을 알리기 위한 별도의 처리가 어렵습니다.
 * 온도 이벤트를 비동기적으로 전파하기 위해서 쓰레드 풀을 사용한다는 점도 단점입니다.
 * 클라이언트가 하나도 없을 때도(아무도 구독하고 있지 않음에도) 이벤트는 계속 발생됩니다.
 
@@ -199,8 +199,8 @@ public interface Iterator<T> {
 }
 ```
 
-* 반복자 패턴의 next()는 하나씩 항목을 검색할 수 있게 합니다.
-* hasNext()는 시퀀스의 끝을 알려줄 수 있게 합니다.
+* 반복자 패턴의 `next()`는 하나씩 항목을 검색할 수 있게 합니다.
+* `hasNext()`는 시퀀스의 끝을 알려줄 수 있게 합니다.
 
 ### 관찰자 패턴 + 반복자 패턴 = 리액티브
 
@@ -213,7 +213,7 @@ public interface RxObserver<T> {
 ```
 
 * RxJava 1.x는 한동한 리액티브 프로그래밍은 위한 표준 라이브러리였습니다.
-* 위의 코드 블럭을 보면 반복자 패턴과 매우 비슷하지만 RxObserver는 onNext()에 의해 새로운 값이 통지되고, onComplete()에 의해 스트림의 끝을 알립니다.
+* 위의 코드 블럭을 보면 반복자 패턴과 매우 비슷하지만 RxObserver는 `onNext()`에 의해 새로운 값이 통지되고, `onComplete()`에 의해 스트림의 끝을 알립니다.
 * 해당 코드에서 에러를 처리해주는 메커니즘이 있다면 좋을 것 입니다.
 
 ```java
@@ -230,9 +230,9 @@ public interface RxObserver<T> {
 ### RxJava 1.x의 Observable, Observer 간의 관계
 
 * ![hello_reactive_02_02.png](/assets/images/hello_reactive_02/hello_reactive_02_02.png)
-* Observable은 0~N개의 이벤트를 Observer 에게 보내고 완료 또는 오류를 시그널을 Observer에게 알립니다.
-* 각 Observer 는 onNext()를 여러 번 호출한 다음, onCompleted() 또는 onError()를 호출합니다.
-    * 이 때 둘이 동시에 호출되지는 않고, onComplete(), onError()가 호출되고 onNext()가 호출되지 않습니다.
+* `Observable`은 0~N개의 이벤트를 `Observer` 에게 보내고 완료 또는 오류를 시그널을 `Observer`에게 알립니다.
+* 각 Observer 는 `onNext()`를 여러 번 호출한 다음, `onCompleted()` 또는 `onError()`를 호출합니다.
+  * 이 때 둘이 동시에 호출되지는 않고, `onComplete()`, `onError()`가 호출되고 `onNext()`가 호출되지 않습니다.
 
 ```java
 
@@ -274,9 +274,9 @@ class TemperatureController {
 }
 ```
 
-* SseEmitter 클라이언트들을 관리하지 않으며 동기화에도 신경쓰지 않을 수 있습니다.
-* 더 이상 ```@EventListener, @Async, @EnableAsync, Executor @Bean(쓰레드 풀)```을 사용하지 않아도 됩니다.
-* 참고로 ```Observable#subscribe```하고 난 결과는 ```Subscription```이라는 객체를 반환합니다.
+* `SseEmitter` 클라이언트들을 관리하지 않으며 동기화에도 신경쓰지 않을 수 있습니다.
+* 더 이상 `@EventListener, @Async, @EnableAsync, Executor @Bean(쓰레드 풀)`을 사용하지 않아도 됩니다.
+* 참고로 `Observable#subscribe`하고 난 결과는 `Subscription`이라는 객체를 반환합니다.
 
 ```java
 interface Subscription {
@@ -286,7 +286,7 @@ interface Subscription {
 }
 ```
 
-* unsubscribe()를 호출하면 Observable에게 더 이상 새 이벤트를 보낼 필요가 없음을 알릴 수 있습니다.
+* `unsubscribe()`를 호출하면 `Observable`에게 더 이상 새 이벤트를 보낼 필요가 없음을 알릴 수 있습니다.
 
 ## 리액티브 표준
 
@@ -300,7 +300,7 @@ interface Subscription {
 
 #### 순수 푸시 모델 방식
 
-* 리액티브 초기 단계에서는 대부분 라이브러리의 데이터 흐름은 Observable에서 Observer에게 순수하게 푸시되는 방식(컨슈머의 처리 성능 상관X)이었습니다.
+* 리액티브 초기 단계에서는 대부분 라이브러리의 데이터 흐름은 `Observable`에서 `Observer`에게 순수하게 푸시되는 방식(컨슈머의 처리 성능 상관X)이었습니다.
 * 순수 푸시 모델은 요청하는 횟수를 최소화하여 전체 시간이 최적화되기 때문에, RxJava 1.x를 비롯한 유사 라이브러리들은 데이터 푸시를 위해 설계되었습니다.
 
 ##### 빠른 프로듀서, 느린 컨슈머
@@ -328,7 +328,7 @@ interface Subscription {
 
 * 리액티브 메니페스토에서 배압 제어 메커니즘의 중요성을 언급한 이유입니다.
 * RxJava 1.x는 배압을 관리하는 표준화된 기능을 제공하지 않습니다.
-    * window, buffer와 같은 연산자가 있지만 모든 서비스가 배치 작업을 지원하지는 않아 적용범위가 제한적입니다.
+  * `window`, `buffer`와 같은 연산자가 있지만 모든 서비스가 배치 작업을 지원하지는 않아 적용범위가 제한적입니다.
 
 ### 리액티브 스트림 표준
 
@@ -368,13 +368,13 @@ interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
 }
 ```
 
-* Processor는 Publisher와 Subscriber 사이에 몇 가지 처리 단계를 추가하도록 설계되었습니다.
+* `Processor`는 `Publisher`와 `Subscriber` 사이에 몇 가지 처리 단계를 추가하도록 설계되었습니다.
 
 #### Publisher/Processor의 구현은 매우 어렵습니다. 만약에 직접 구현하려면 다음 문헌을 참고하세요
 
 * https://medium.com/@olehdokuka/mastering-own-reactive-streams-implementation-part-1-publisher-e8eaf928a78c
 * https://github.com/reactive-streams/reactive-streams-jvm/tree/master/tck
-    * Publisher/Subscriber 등의 구현을 검증하는 테스트 케이스가 있습니다.
+  * `Publisher/Subscriber` 등의 구현을 검증하는 테스트 케이스가 있습니다.
 
 ### JDK9
 

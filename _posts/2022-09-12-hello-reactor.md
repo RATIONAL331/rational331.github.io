@@ -18,7 +18,7 @@ last_modified_at: 2022-09-12T
 
 ## Mono
 
-* Mono는 0 또는 1개의 데이터를 emit(방출)하는 Publisher입니다.
+* `Mono`는 0 또는 1개의 데이터를 emit(방출)하는 `Publisher`입니다.
 
 |             |      ```Object```      |
 |:-----------:|:----------------------:|
@@ -43,8 +43,8 @@ class StreamExample {
 ```
 
 * 위 코드는 1초를 기다리지 않습니다.
-* ```integerStream.forEach(...)```과 같은 terminate operation을 호출해야지만 1초를 기다리게 됩니다.
-* ```Stream```은 ```Lazy```한 특성을 가지고 있습니다.
+* `integerStream.forEach(...)`과 같은 `terminate operation`을 호출해야지만 1초를 기다리게 됩니다.
+* `Stream`은 `Lazy`한 특성을 가지고 있습니다.
 
 ### Mono 예제
 
@@ -57,8 +57,8 @@ public class MonoJust {
 }
 ```
 
-* Publisher에서도 Stream과 비슷한 규칙중 하나는 ```구독(subscribe)하기 전까지 아무일도 일어나지 않습니다.```
-* 위 코드에서 ```just.subscribe(...)``` 를 호출해야지만 1이 출력됩니다.
+* `Publisher`에서도 `Stream`과 비슷한 규칙중 하나는 ```구독(subscribe)하기 전까지 아무일도 일어나지 않습니다.```
+* 위 코드에서 `just.subscribe(...)` 를 호출해야지만 1이 출력됩니다.
 
 #### subscribe
 
@@ -118,10 +118,11 @@ completed
 ERROR: java.lang.IllegalArgumentException
 ```
 
-* subscribe 함수는 3가지 파라미터를 받을 수 있습니다.
-    * ```onNext```: 데이터를 받고 나서 호출
-    * ```onError```: 에러 시그널을 발았을 때 호출
-    * ```onComplete```: complete 시그널을 받았을 때 호출
+* `subscribe` 함수는 보통 3가지 파라미터를 받을 수 있습니다.
+    * `onNext`: 데이터를 받고 나서 호출
+    * `onError`: 에러 시그널을 발았을 때 호출
+    * `onComplete`: complete 시그널을 받았을 때 호출
+    * 이 이외에도 몇가지 있지만 직접 살펴보시기 바랍니다.
 
 #### fromSupplier, fromCallable [Supplier, Callable 차이][1]
 
@@ -223,13 +224,13 @@ SOMETHING
 
 [1]: https://stackoverflow.com/questions/52215917/callable-vs-supplier-interface-in-java
 
-* ```fromSupplier```, ```fromCallable```은 데이터를 생성하는 시점을 지연시킵니다.
+* `fromSupplier`, `fromCallable`은 데이터를 생성하는 시점을 지연시킵니다.
 * 구독이 해야지만 해당 파이프라인 내부를 수행하기 시작합니다. 구독이 이루어지지 않으면 아무런 동작도 하지 않습니다.
-* ```fromFuture```, ```fromRunnable``` 등의 메소드도 있습니다.
-    * ```fromFuture```
-        * ```Mono.fromFuture(CompletableFuture.supplyAsync(() -> "Hello"));```
+* `fromFuture`, `fromRunnable` 등의 메소드도 있습니다.
+    * `fromFuture`
+        * `Mono.fromFuture(CompletableFuture.supplyAsync(() -> "Hello"));`
         * 마찬가지로 구독이 이루어지지 않으면 아무런 동작도 하지 않습니다.
-        * fromFuture는 future가 시간이 걸리는 작업이더라도 바로 다음 줄을 수행합니다.
+        * `fromFuture`는 `future`가 시간이 걸리는 작업이더라도 바로 다음 줄을 수행합니다.
 
 ``` java
 public class MonoFromFuture {
@@ -248,10 +249,10 @@ public class MonoFromFuture {
 }
 ```
 
-* ```fromRunnable```
-    * ```Mono.fromRunnable(() -> { System.out.println("Hello"); });```
-    * ```Runnable``` 객체는 파라미터가 없고 리턴값이 없는 함수형 인터페이스입니다.
-    * fromFuture와는 다르게 내부가 블록되면 구독을 하는 곳도 블록됩니다.
+* `fromRunnable`
+    * `Mono.fromRunnable(() -> { System.out.println("Hello"); });`
+    * `Runnable` 객체는 파라미터가 없고 리턴값이 없는 함수형 인터페이스입니다.
+    * `fromFuture`와는 다르게 내부가 블록되면 구독을 하는 곳도 블록됩니다.
 
 ``` java
 public class MonoFromRunnable {
@@ -276,13 +277,13 @@ public class MonoFromRunnable {
 
 ## Flux
 
-* Flux는 0 부터 N개의 데이터를 emit(방출)하는 Publisher입니다.
+* `Flux`는 0 부터 N개의 데이터를 emit(방출)하는 `Publisher`입니다.
 
-|             |     ```Object```     |
-|:-----------:|:--------------------:|
-|    Java     |  ```List<Object>```  |
-| Java Stream | ```Stream<Object>``` |
-|   Reactor   |  ```Flux<Object>```  |
+|             |     `Object`   |
+|:-----------:|:--------------:|
+|    `Java`     |  `List<Object>` |
+| `Java Stream` | `Stream<Object>` |
+|   `Reactor`   | `Flux<Object>` |
 
 ### Flux 예제
 
@@ -299,7 +300,7 @@ public class FluxJust {
 }
 ```
 
-* ```Mono```, ```Flux``` 모두 ```Publisher```이기 때문에, 대부분의 메소드는 Mono와 유사한점들이 많습니다.
+* `Mono`, `Flux` 모두 `Publisher`이기 때문에, 대부분의 메소드는 `Mono`와 유사한점들이 많습니다.
 * Mono를 사용하는 이유는 둘 이상의 결과를 기대하지 않는 것이 명확해집니다.
 
 #### 여러 개의 구독자
@@ -331,8 +332,8 @@ Subscriber 3: 2
 Subscriber 3: 4
 ```
 
-* operator를 적용하면 publisher가 변경되는 것이 아닌 새로운 Publisher를 리턴합니다.
-* 구독을 다시 하면 Publisher는 이벤트를 처음부터 다시 발생을 시도합니다.
+* `operator`를 적용하면 `publisher`가 변경되는 것이 아닌 새로운 `Publisher`를 리턴합니다.
+* 구독을 다시 하면 `Publisher`는 이벤트를 처음부터 다시 발생을 시도합니다.
 
 #### fromStream
 
@@ -357,9 +358,9 @@ class FluxFromStream {
 }
 ```
 
-* ```Stream```의 성질 중 하나는 한번 사용하면 닫힙니다. (재사용 불가)
-* 따라서 ```fromStream(Stream<? extends T> s)``` 를 사용하면 구독하고 나서 s는 재사용 불가합니다.
-* 그러므로 ```fromStream(Supplier<Stream<? extends T>> streamSupplier)``` 를 사용하면 구독할 때마다 새로운 ```Stream```을 생성하므로 재구독에 안전합니다.
+* `Stream`의 성질 중 하나는 한번 사용하면 닫힙니다. (재사용 불가)
+* 따라서 `fromStream(Stream<? extends T> s)` 를 사용하면 구독하고 나서 s는 재사용 불가합니다.
+* 그러므로 `fromStream(Supplier<Stream<? extends T>> streamSupplier)` 를 사용하면 구독할 때마다 새로운 ```Stream```을 생성하므로 재구독에 안전합니다.
 
 #### fromIterable, fromArray
 
@@ -430,11 +431,11 @@ Completed
 java.lang.ArithmeticException: / by zero
 ```
 
-* range 함수는 (시작값, 개수)를 받습니다.
+* `range` 함수는 (시작값, 개수)를 받습니다.
     * (3, 5)라면 3, 4, 5, 6, 7을 발행합니다.
-* log 함수는 subscriber가 어떤식으로 처리하고 있는지 보여줍니다.
-* Flux가 발행도중 에러가 발생한다면 에러를 출력하고 종료합니다.
-    * onComplete는 출력되지 않습니다.
+* `log` 함수는 `subscriber`가 어떤식으로 처리하고 있는지 보여줍니다.
+* `Flux`가 발행도중 에러가 발생한다면 에러를 출력하고 종료합니다.
+    * `onComplete`는 출력되지 않습니다.
 
 #### interval
 
@@ -448,7 +449,7 @@ class FluxInterval {
 }
 ```
 
-* interval 함수는 0부터 명시한 시간동안 1씩 증가하는 값을 발행합니다.
+* `interval` 함수는 0부터 명시한 시간동안 1씩 증가하는 값을 발행합니다.
 
 #### from, next
 
@@ -468,9 +469,9 @@ class FluxFromNext {
 }
 ```
 
-* from 함수는 Publisher를 Flux로 반환합니다. (위의 예제에서는 Mono를 Flux로 변환)
-* next 함수는 Flux의 첫번째 요소를 Mono로 반환합니다. (Flux가 비어있는 경우, Mono역시 비어있습니다.)
-    * single 과 유사하지만 single은 반드시 하나가 존재해야하며, 비어있는 Publisher일 경우 에러를 발생시킵니다.
+* `from` 함수는 `Publisher`를 `Flux`로 반환합니다. (위의 예제에서는 `Mono`를 `Flux`로 변환)
+* `next` 함수는 `Flux`의 첫번째 요소를 `Mono`로 반환합니다. (`Flux`가 비어있는 경우, `Mono`역시 비어있습니다.)
+    * `single` 과 유사하지만 `single`은 반드시 하나가 존재해야하며, 비어있는 `Publisher`일 경우 에러를 발생시킵니다.
 
 #### subscribeWith
 
@@ -532,11 +533,11 @@ subscription.cancel()
 nothing happen
 ```
 
-* subscribeWith 함수는 Subscriber를 인자로 받아서 처리합니다.
-* 위 예제에서는 Publisher가 전달한 Subscription을 바깥에서 확인할 수 있게끔 하였습니다.
-* subscription.request(2)를 통해 Publisher에게 2개의 요소를 요청하여 전달받았습니다.
-* subscription.cancel()을 통해 Publisher에게 더이상 요소를 요청하지 않겠다고 알렸습니다.
-* subscription.request(1)을 통해 Publisher에게 요소를 요청하였지만, 이미 cancel을 통해 요청을 거부했기 때문에 아무런 동작이 일어나지 않았습니다.
+* `subscribeWith` 함수는 `Subscriber`를 인자로 받아서 처리합니다.
+* 위 예제에서는 `Publisher`가 전달한 `Subscription`을 바깥에서 확인할 수 있게끔 하였습니다.
+* `subscription.request(2)`를 통해 `Publisher`에게 2개의 요소를 요청하여 전달받았습니다.
+* `subscription.cancel()`을 통해 `Publisher`에게 더이상 요소를 요청하지 않겠다고 알렸습니다.
+* `subscription.request(1)`을 통해 `Publisher`에게 요소를 요청하였지만, 이미 `cancel`을 통해 요청을 거부했기 때문에 아무런 동작이 일어나지 않았습니다.
 
 #### Flux vs List
 
@@ -588,5 +589,5 @@ Generate name... (1초에 한번씩)
 name4 (1초에 한번씩)
 ```
 
-* Flux의 경우 결과가 생성되는데로 반환합니다.
-* List의 경우에는 생성되는데로 반환하는 것이 아니라, 모든 결과가 생성되면 한꺼번에 반환합니다.
+* `Flux`의 경우 결과가 생성되는데로 반환합니다.
+* `List`의 경우에는 생성되는데로 반환하는 것이 아니라, 모든 결과가 생성되면 한꺼번에 반환합니다.

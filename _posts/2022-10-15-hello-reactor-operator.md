@@ -18,8 +18,8 @@ last_modified_at: 2022-10-16T
 ## map
 
 * 각각의 데이터에 동기 함수를 적용하여 각각의 데이터를 변환합니다.
-* map체이닝이 많아지면 동기 함수를 여러번 적용하여 오버헤드가 발생할 수 있습니다.
-* map을 여러번 사용하는 대신 flatMap을 사용하는 것이 좋습니다.
+* `map`체이닝이 많아지면 동기 함수를 여러번 적용하여 오버헤드가 발생할 수 있습니다.
+* `map`을 여러번 사용하는 대신 `flatMap`을 사용하는 것이 좋습니다.
   * https://youtu.be/I0zMm6wIbRI?t=1074 (NHN Forward 2020 - 김병부 수석님)
 * ![hello_reactor_05_01.png](/assets/images/hello_reactor_05/hello_reactor_05_01.png)
 
@@ -31,17 +31,17 @@ last_modified_at: 2022-10-16T
 
 ## flatMapSequential
 
-* flatMap과 유사하나 끼워넣기가 허용되지 않습니다.
+* `flatMap`과 유사하나 끼워넣기가 허용되지 않습니다.
   * 따라서 원래 순서를 유지합니다.
   * 순서를 유지하기 위하여 내부적으로 큐를 사용합니다.
 
 ## concatMap
 
-* flatMapSequential과 유사하여 원래 순서를 유지합니다. (끼워넣기 허용 안함)
-* flatMap, flatMapSequential과 결정적으로 다른 부분은 하나의 데이터가 완전히 처리될 때 까지 기다립니다. (속도면에서 불리합니다.)
-  * flatMap, flatMapSequential은 하나의 데이터가 완전히 처리되지 않아도 다음 데이터를 처리합니다. (eagerly subscribing)
-  * concatMap은 첫번째 데이터가 완전히 처리되어 complete 시그널이 도착해야 그 다음 두번째 데이터가 방출되어 처리되기 시작합니다. (순차 변환)
-  * flatMapSequential은 순서를 유지하기 위하여 내부적으로 큐를 사용했지만, concatMap은 그럴 필요가 없습니다.
+* `flatMapSequential`과 유사하여 원래 순서를 유지합니다. (끼워넣기 허용 안함)
+* `flatMap`, `flatMapSequential`과 결정적으로 다른 부분은 하나의 데이터가 완전히 처리될 때 까지 기다립니다. (속도면에서 불리합니다.)
+  * `flatMap`, `flatMapSequential`은 하나의 데이터가 완전히 처리되지 않아도 다음 데이터를 처리합니다. (eagerly subscribing)
+  * `concatMap`은 첫번째 데이터가 완전히 처리되어 complete 시그널이 도착해야 그 다음 두번째 데이터가 방출되어 처리되기 시작합니다. (순차 변환)
+  * `flatMapSequential`은 순서를 유지하기 위하여 내부적으로 큐를 사용했지만, `concatMap`은 그럴 필요가 없습니다.
 
 ```java
 class FlatConcatMap {
@@ -102,7 +102,7 @@ class FlatConcatMap {
 
 * 데이터가 방출될 될때마다 기존 변환을 취소하고 그 다음 데이터를 퍼블리셔로 변환합니다.
 * 항상 마지막 데이터는 온전하게 처리되는 것을 보장해야할 때 사용할 수 있습니다.
-* switchMap이 적절한 예제를 다음 주소에서 확인할 수 있습니다.
+* `switchMap`이 적절한 예제를 다음 주소에서 확인할 수 있습니다.
   * https://medium.com/@elizabethveprik/rxjava-flatmap-vs-switchmap-85cd7e2c791c
   * 기존 데이터 변환에 더 이상 신경쓰지 않아야 하는 상황에서 유용하게 사용할 수 있습니다.
 * 또 다른 예제로 포털사이트에서 검색하는 시나리오가 있습니다.
@@ -110,7 +110,7 @@ class FlatConcatMap {
 * 검색어를 입력하면 검색어를 포함하는 데이터를 검색하는 API를 호출합니다.
 * 이 때 어떤 한 응답이 늦게 도착하는 상황이라면 어떻게 될까요?
   * 엉뚱한 결과가 리스트에 늦게 반영이 될 수 있습니다.
-  * 해당 현상을 막기 위해 switchMap을 사용할 수 있습니다.
+  * 해당 현상을 막기 위해 `switchMap`을 사용할 수 있습니다.
 
 ```java
 class SwitchMap {
@@ -240,18 +240,18 @@ class Handle {
 }
 ```
 
-* handle 내부에서 synchronousSink.next()는 최대 한번만 불려야합니다.
-* handle 내부에서 synchronousSink.complete()를 호출하면 더이상 데이터를 방출하지 않습니다.
+* `handle` 내부에서 `synchronousSink.next()`는 최대 한번만 불려야합니다.
+* `handle` 내부에서 `synchronousSink.complete()`를 호출하면 더이상 데이터를 방출하지 않습니다.
 
 ## do...
 
-* doFirst: 조립 단계 후에(구독 단계에서) 처음으로 호출됩니다.
-* doFinally: 어떠한 이유로 끝나면 호출됩니다. (에러, 완료, 취소)
-* doOnSubscribe: 런타임 단계에서 구독자가 퍼블리셔에게 실제로 구독을 할 때 호출됩니다.
-* doOnNext: 런타임 단계에서 데이터가 발행될 때 호출됩니다.
-* doOnComplete: 퍼블리셔가 완료될 때 호출됩니다.
-* doOnCancel: 구독이 취소될 때 호출됩니다.
-* doOnDiscard: 구독자가 데이터를 받지 않고 버릴 때 호출됩니다.
+* `doFirst`: 조립 단계 후에(구독 단계에서) 처음으로 호출됩니다.
+* `doFinally`: 어떠한 이유로 끝나면 호출됩니다. (에러, 완료, 취소)
+* `doOnSubscribe`: 런타임 단계에서 구독자가 퍼블리셔에게 실제로 구독을 할 때 호출됩니다.
+* `doOnNext`: 런타임 단계에서 데이터가 발행될 때 호출됩니다.
+* `doOnComplete`: 퍼블리셔가 완료될 때 호출됩니다.
+* `doOnCancel`: 구독이 취소될 때 호출됩니다.
+* `doOnDiscard`: 구독자가 데이터를 받지 않고 버릴 때 호출됩니다.
 
 ```java
 class DoCallback {
@@ -309,8 +309,8 @@ class DoCallback {
 ## limitRate
 
 * 구독자가 퍼블리셔에게 요청하는 데이터의 개수를 제한합니다.
-* limitRate(n)을 설정하면 맨 처음 n만큼 데이터를 요청하고 나서 그 다음부터는 replenishing optimization에 의하여 n의 75%만큼 요청합니다.
-* limitRate(high, low)를 설정하면 맨 처음 high만큼 데이터를 요청하고 나서 그 다음부터는 low만큼 요청합니다.
+* `limitRate(n)`을 설정하면 맨 처음 n만큼 데이터를 요청하고 나서 그 다음부터는 replenishing optimization에 의하여 n의 75%만큼 요청합니다.
+* `limitRate(high, low)`를 설정하면 맨 처음 high만큼 데이터를 요청하고 나서 그 다음부터는 low만큼 요청합니다.
 
 ```java
 class LimitRate {
@@ -438,8 +438,8 @@ class StartWith {
 }
 ```
 
-* startWith는 Iterable, T..., Publisher를 인자로 받을 수 있습니다.
-* Publisher로 인자로 받을 때에는, 인자로 넘어온 Publisher가 데이터를 모두 방출하고 나서야 데이터를 방출합니다.
+* `startWith`는 `Iterable`, `T...`, `Publisher`를 인자로 받을 수 있습니다.
+* `Publisher`로 인자로 받을 때에는, 인자로 넘어온 `Publisher`가 데이터를 모두 방출하고 나서야 데이터를 방출합니다.
 
 ## concat
 
@@ -507,15 +507,15 @@ class Concat {
 }
 ```
 
-* concat, concatWith는 Publisher를 순차적으로 연결합니다.
+* `concat`, `concatWith`는 `Publisher`를 순차적으로 연결합니다.
   * 이 때 각각의 구독이 완료되고 나서야 그 다음 퍼블리셔를 순차적으로 구독합니다.
   * 에러가 발생하면 그 다음 퍼블리셔는 구독되지 않습니다.
-  * concatDelayError는 에러가 발생해도 그 다음 퍼블리셔를 구독합니다.
+  * `concatDelayError`는 에러가 발생해도 그 다음 퍼블리셔를 구독합니다.
 
 ## merge
 
-* concat과 유사하나 가장 크게 다른 점은 각각의 구독자를 모두 구독합니다. (eagerly subscribe)
-  * concat은 구독자가 각각의 구독을 완료하고 나서야 다음 퍼블리셔를 순차적으로 구독합니다.
+* `concat`과 유사하나 가장 크게 다른 점은 각각의 구독자를 모두 구독합니다. (eagerly subscribe)
+  * `concat`은 구독자가 각각의 구독을 완료하고 나서야 다음 퍼블리셔를 순차적으로 구독합니다.
 
 ```java
 class Merge {
@@ -543,9 +543,9 @@ class Merge {
 
 ## zip
 
-* 여러개의 Publisher를 하나로 합쳐서 하나의 Publisher로 만듭니다.
-  * 각각의 Publisher가 방출하는 데이터를 하나로 합쳐서 방출합니다.
-  * 각각의 Publisher가 방출하는 데이터의 개수가 다르면 더 적은 데이터를 가진 Publisher가 방출하는 데이터의 개수만큼만 방출합니다.
+* 여러개의 `Publisher`를 하나로 합쳐서 하나의 `Publisher`로 만듭니다.
+  * 각각의 `Publisher`가 방출하는 데이터를 하나로 합쳐서 방출합니다.
+  * 각각의 `Publisher`가 방출하는 데이터의 개수가 다르면 더 적은 데이터를 가진 `Publisher`가 방출하는 데이터의 개수만큼만 방출합니다.
 
 ```java
 class Zip {
@@ -616,12 +616,12 @@ class Zip {
 
 # 모아서 처리하기(배치)
 
-* Publisher가 방출하는 데이터를 모아서 처리하는 방법에 대해 알아봅니다.
+* `Publisher`가 방출하는 데이터를 모아서 처리하는 방법에 대해 알아봅니다.
 
 ## buffer
 
 * ![hello_reactor_05_03.png](/assets/images/hello_reactor_05/hello_reactor_05_03.png)
-* buffer는 Publisher가 방출하는 데이터를 모아서 List로 만들어서 방출합니다. (`Flux<List<T>>`)
+* `buffer`는 `Publisher`가 방출하는 데이터를 모아서 `List`로 만들어서 방출합니다. (`Flux<List<T>>`)
 
 ```java
 class FluxBuffer {
@@ -682,12 +682,12 @@ class FluxBuffer {
 }
 ```
 
-* buffer는 size만큼 모으거나, 시간 단위로 모아서 처리할 수 있습니다.
-* bufferTimeout은 갯수 또는 시간을 둘다 적용하여 모아서 처리할 수 있습니다.
-* buffer(size, skip)은 size만큼 모아서 처리하고, skip만큼 삭제하면서 처리합니다.
-  * 그래서 buffer(n)은 buffer(n, n)과 같습니다.
+* `buffer`는 size만큼 모으거나, 시간 단위로 모아서 처리할 수 있습니다.
+* `bufferTimeout`은 갯수 또는 시간을 둘다 적용하여 모아서 처리할 수 있습니다.
+* `buffer(size, skip)`은 size만큼 모아서 처리하고, skip만큼 삭제하면서 처리합니다.
+  * 그래서 `buffer(n)`은 `buffer(n, n)`과 같습니다.
   * skip이 size보다 더 크면 초과 이벤트를 버립니다. (dropping buffer)
-  * 예를들어 buffer(3, 5)는 3개씩 모아서 처리하고, 5개씩 삭제하면서 처리합니다. (초과 2개의 이벤트가 버려짐)
+  * 예를들어 `buffer(3, 5)`는 3개씩 모아서 처리하고, 5개씩 삭제하면서 처리합니다. (초과 2개의 이벤트가 버려짐)
 
 ```text
 Received: [event0, event1, event2]
@@ -755,7 +755,7 @@ class FluxWindow {
 ## group
 
 * ![hello_reactor_05_05.png](/assets/images/hello_reactor_05/hello_reactor_05_05.png)
-* Publisher를 특정 조건에 따라 여러개의 Publisher로 쪼갭니다. (Flux<GroupedFlux<K, T>>)
+* `Publisher`를 특정 조건에 따라 여러개의 `Publisher`로 쪼갭니다. (`Flux<GroupedFlux<K, T>>`)
   * `GroupedFlux<K, V>`는 `Flux<V>`를 상속받고 있습니다.
     * 그래서 `GroupedFlux<K, V>`를 `Flux<V>`로 취급할 수 있습니다.
     * K는 쪼개지는 기준이 되는 값입니다.
@@ -860,7 +860,7 @@ class Retry {
 
 ## RetryWhen
 
-* Retry 스펙을 좀 더 세밀하게 조정할 수 있습니다.
+* `Retry` 스펙을 좀 더 세밀하게 조정할 수 있습니다.
 
 ```java
   class RetryWhen {
@@ -890,7 +890,7 @@ class Retry {
 }
 ```
 
-* RetryWhen을 좀 더 세밀하게 조절한 예제를 살펴봅시다.
+* `RetryWhen`을 좀 더 세밀하게 조절한 예제를 살펴봅시다.
 
 ```java
 class RetryExample {

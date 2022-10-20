@@ -12,8 +12,8 @@ last_modified_at: 2022-10-03T
 
 * ![hello_reactor_03_01.webp](/assets/images/hello_reactor_03/hello_reactor_03_01.webp)
 * 위에 거랑은 관계가 없긴 합니다.
-* 퍼블리셔는 Cold Publisher, Hot Publisher로 나뉩니다.
-* Cold Publisher는 구독자가 나타날 때 마다 해당 구독자에게 모든 데이터가 생성되는 방식으로 동작합니다.
+* 퍼블리셔는 `Cold Publisher`, `Hot Publisher`로 나뉩니다.
+* `Cold Publisher`는 구독자가 나타날 때 마다 해당 구독자에게 모든 데이터가 생성되는 방식으로 동작합니다.
 * 또한 구독자가 없으면 데이터가 생성되지 않습니다.
 
 ## Cold Publisher
@@ -50,16 +50,16 @@ class ColdPublishser {
 }
 ```
 
-* 다른 구독자가 나타나서 구독을 한다면 getMovie()가 다시 호출되어 총 두 번 호출 되는 것을 볼 수 있습니다.
-* 기본적으로 Hot을 취급하는 연산자가 아니면 대부분 Cold로 동작합니다.
-* 지금까지 대부분 봤던 Publisher는 Cold Publisher입니다.
+* 다른 구독자가 나타나서 구독을 한다면 `getMovie()`가 다시 호출되어 총 두 번 호출 되는 것을 볼 수 있습니다.
+* 기본적으로 `Hot`을 취급하는 연산자가 아니면 대부분 Cold로 동작합니다.
+* 지금까지 대부분 봤던 `Publisher`는 `Cold Publisher`입니다.
 
 ## Hot Publisher
 
-* Hot Publisher의 데이터 생성은 구독자 존재 여부에 의존하지 않습니다.
+* `Hot Publisher`의 데이터 생성은 구독자 존재 여부에 의존하지 않습니다.
 * 따라서 첫번째 구독자가 구독을 하기 전에 원소를 만들어내기 시작할 수 있습니다.
 * 또한 구독자가 구독할 때 이전에 생성된 값을 보내지 않고 새롭게 만들어진 값만 보낼 수 있습니다.
-* just()는 빌드될 때 값이 한 번만 계산되고 새롭게 구독하면 다시 계산되지 않는 형태의 Hot Publisher를 생성합니다.
+* `just()`는 빌드될 때 값이 한 번만 계산되고 새롭게 구독하면 다시 계산되지 않는 형태의 `Hot Publisher`를 생성합니다.
 
 ```java
 class FluxJust {
@@ -88,12 +88,12 @@ class FluxJust {
 
 ```
 
-* defer()로 래핑하여 Cold Publisher로 전활할 수 있습니다. 이렇게 되면 초기화 시 값을 생성하더라도, 새 구독을 하면 초기화를 합니다.
-* ```Flux.defer(() -> Flux.just(1, 2, 3))```
+* `defer()`로 래핑하여 `Cold Publisher`로 전활할 수 있습니다. 이렇게 되면 초기화 시 값을 생성하더라도, 새 구독을 하면 초기화를 합니다.
+* `Flux.defer(() -> Flux.just(1, 2, 3))`
 
 ### share
 
-* share() 연산자를 사용하면 Cold Publisher를 Hot Publisher로 쉽게 전환할 수 있습니다.
+* `share()` 연산자를 사용하면 `Cold Publisher`를 `Hot Publisher`로 쉽게 전환할 수 있습니다.
 
 ```java
 class HotShare {
@@ -242,11 +242,11 @@ class HotRefCount() {
 }
 ```
 
-* publish() 함수는 ConnectableFlux를 리턴합니다.
-* refCount()는 특정 구독자 수가 충족되면 그 때 데이터 생성을 시작합니다.
-* refCount()에서 지정한 구독자 수를 충족하지 못한다면 데이터 생성이 시작되지 않습니다.
-* publisher().refCount(1)는 share()와 같습니다.
-    * refCount()에 인자를 주지 않으면 refCount(1)과 같습니다.
+* `publish()` 함수는 `ConnectableFlux`를 리턴합니다.
+* `refCount()`는 특정 구독자 수가 충족되면 그 때 데이터 생성을 시작합니다.
+* `refCount()`에서 지정한 구독자 수를 충족하지 못한다면 데이터 생성이 시작되지 않습니다.
+* `publisher().refCount(1)`는 `share()`와 같습니다.
+  * `refCount()`에 인자를 주지 않으면 `refCount(1)`과 같습니다.
 
 ```java
 class HotCreate {
@@ -325,16 +325,16 @@ class HotCreate {
 }
 ```
 
-* Flux.create로 직접 프로그래밍적으로 데이터를 방출하는 예제를 살펴봅시다.
-* refCount(2)이기 때문에 두 개의 구독자가 구독을 해야지만 데이터 생성이 시작됩니다.
+* `Flux.create`로 직접 프로그래밍적으로 데이터를 방출하는 예제를 살펴봅시다.
+* `refCount(2)`이기 때문에 두 개의 구독자가 구독을 해야지만 데이터 생성이 시작됩니다.
 * 세번째 구독자는 바로 구독을 하였지만 데이터를 전혀 받지 못하였습니다.
-    * main thread에서 두번째 구독까지 처리 진행하였고 세번째 구독자는 기다렸습니다.
+  * main thread에서 두번째 구독까지 처리 진행하였고 세번째 구독자는 기다렸습니다.
 * 네번째 구독자가 등장할 때 데이터 생성이 다시 시작되었습니다.
-    * 앞에 두개의 구독이 모두 끝난 후 데이터 생성이 시작되었습니다.
+  * 앞에 두개의 구독이 모두 끝난 후 데이터 생성이 시작되었습니다.
 
 ### autoConnect
 
-* autoConnect는 refCount와 유사하게 구독자 수를 자동으로 추적합니다.
+* `autoConnect`는 `refCount`와 유사하게 구독자 수를 자동으로 추적합니다.
 * 다른 점을 아래 예제로 살펴봅시다.
 
 ```java
@@ -412,15 +412,14 @@ class HotAutoConnect {
 }
 ```
 
-* autoConnect()는 refCount()와 유사하게 구독자 수를 추적합니다.
-* refCount()는 만약 데이터가 모두 소진되고 나서 재구독이 이루어진다면 다시 데이터를 생성합니다.
-    * refCount(0)은 불가능합니다.
-* autoConnect()는 데이터가 모두 소진되고 나서 재구독을 하여도 데이터를 생성하지 않습니다.
-    * autoConnect(0)은 가능합니다.
+* `refCount()`는 만약 데이터가 모두 소진되고 나서 재구독이 이루어진다면 다시 데이터를 생성합니다.
+  * `refCount(0)`은 불가능합니다.
+* `autoConnect()`는 데이터가 모두 소진되고 나서 재구독을 하여도 다시 데이터를 생성하지 않습니다.
+  * `autoConnect(0)`은 가능합니다.
 
 ### cache
 
-* cache()는 데이터가 발행된 것을 기억하게 합니다.
+* `cache()`는 데이터가 발행된 것을 기억하게 합니다.
 
 ```java
 class HotCache() {
@@ -499,11 +498,11 @@ class HotCache() {
 }
 ```
 
-* cache()는 publish().replay()와 같습니다.
-    * cache(n) == publish().replay(n)
-* cache()에 인자가 들어오지 않으면 Integer.MAX_VALUE개의(대략 21억) 원소를 기억합니다.
-* cache()에 숫자뿐만 아니라 Duration 객체를 지정할 수 있습니다.
-    * Duration 객체를 지정하면 해당 기간만큼 캐싱이 유지됩니다.
+* `cache()`는 `publish().replay()`와 같습니다.
+  * `cache(n) == publish().replay(n)`
+* `cache()`에 인자가 들어오지 않으면 `Integer.MAX_VALUE`개의(대략 21억) 원소를 기억합니다.
+* `cache()`에 숫자뿐만 아니라 `Duration` 객체를 지정할 수 있습니다.
+  * `Duration` 객체를 지정하면 해당 기간만큼 캐싱이 유지됩니다.
 
 # Schedulers
 
@@ -517,8 +516,8 @@ class HotCache() {
 
 * ![hello_reactor_03_02.png](/assets/images/hello_reactor_03/hello_reactor_03_02.png)
 * 우리가 여태껏 봐왔던 모델입니다.
-    * Subscriber가 Publisher에게 구독하여 Pushbliser가 Subscriber에게 데이터가 전달되는 모습입니다.
-    * 이 때 실행되는 Thread를 Current Thread (현재 실행 쓰레드)라고 합니다.
+  * `Subscriber`가 `Publisher`에게 구독하여 `Pushbliser`가 `Subscriber`에게 데이터가 전달되는 모습입니다.
+  * 이 때 실행되는 Thread를 Current Thread (현재 실행 쓰레드)라고 합니다.
     * 대개 현재 실행 쓰레드는 Main Thread입니다.
 
 ```java
@@ -562,10 +561,10 @@ class ThreadDemo {
 }
 ```
 
-* 일반적으로 구독을 진행하게 되면 Publisher가 데이터를 만들어내고, Subscriber가 데이터를 받아서 처리하는 전 과정은 현재 실행 쓰레드에서 수행됩니다.
+* 일반적으로 구독을 진행하게 되면 `Publisher`가 데이터를 만들어내고, `Subscriber`가 데이터를 받아서 처리하는 전 과정은 현재 실행 쓰레드에서 수행됩니다.
 * 위 예제에서는 구독을 다른 쓰레드에서 수행하는 과정이 포함 되어있습니다.
-    * 데이터 생성과 Subscriber가 받아서 처리하는 것까지 다른 쓰레드에서 수행되었습니다.
-    * 이 때 데이터 생성과 Subscriber가 받아서 처리하는 것은 같은 쓰레드에서 수행되었습니다.
+  * 데이터 생성과 `Subscriber`가 받아서 처리하는 것까지 다른 쓰레드에서 수행되었습니다.
+  * 이 때 데이터 생성과 `Subscriber`가 받아서 처리하는 것은 같은 쓰레드에서 수행되었습니다.
 * 이제부터 구독 과정, 데이터 생성, 데이터 처리 과정을 각각 다른 쓰레드에서 수행할 수 있도록 조절해보겠습니다.
 
 ## Scheduler 종류
@@ -577,27 +576,27 @@ class ThreadDemo {
 |      single       | 하나의 작업 처리를 위한 단 한개의 지정된 쓰레드 |
 |     immediate     |           현재 쓰레드            |
 
-* Schedulers는 병렬 데이터 처리가 아닙니다.
+* `Schedulers`는 병렬 데이터 처리가 아닙니다.
 * 모든 연산들은 항상 순차적으로 수행됩니다.
 * 데이터는 하나씩 쓰레드풀에 의해 처리됩니다.
-* 그래서 Schedulers.parallel()는 병렬 실행을 의미하지 않습니다.
-    * CPU 집약적 일을 위한 쓰레드 풀입니다.
+* 그래서 `Schedulers.parallel()`는 병렬 실행을 의미하지 않습니다.
+  * CPU 집약적 일을 위한 쓰레드 풀입니다.
 * ![hello_reactor_03_05.png](/assets/images/hello_reactor_03/hello_reactor_03_05.png)
 * 왼쪽의 그림은 데이터가 병렬 처리되는 것을 보여주고 있습니다.
 * 오른쪽 그림은 여러 구독자가 있을 때 각각의 쓰레드 풀에서 데이터를 처리하는 것을 보여주고 있습니다.
-* 스케쥴러에서 parallel은 왼쪽처럼 데이터를 병렬처리하는 것이 아닙니다.
-    * 여러개의 구독자가 있을 때 해당 처리를 쓰레드 풀에서 처리하게 할지 결정하게 하는 것 입니다.
+* 스케쥴러에서 `parallel`은 왼쪽처럼 데이터를 병렬처리하는 것이 아닙니다.
+  * 여러개의 구독자가 있을 때 해당 처리를 쓰레드 풀에서 처리하게 할지 결정하게 하는 것 입니다.
 
 ## subscribeOn
 
 * ![hello_reactor_03_03.png](/assets/images/hello_reactor_03/hello_reactor_03_03.png)
-* SubscribeOn은 업스트림(구독할 때) 쓰레드를 조절할 수 있습니다.
-    * 또한 해당 메서드는 런타임에서 데이터가 전달되는(다운트스림) 쓰레드도 조절이 됩니다.
+* `subscribeOn`은 업스트림(구독할 때) 쓰레드를 조절할 수 있습니다.
+  * 또한 해당 메서드는 런타임에서 데이터가 전달되는(다운트스림) 쓰레드도 조절이 됩니다.
 * 맨 처음 조립단계가 진행됩니다.
 * 조립 단계가 종료된 후 구독 단계가 수행됩니다.
 * 구독은 아래에서 위로 진행됩니다.
-    * Sub이 Op를 구독, Op가 다른 Op를 구독, Op가 Pub을 구독
-    * 이 떄 subscribeOn을 만나면 해당 부분에서 구독 단계를 다른 쓰레드에서 수행하도록 조절합니다.
+  * `Sub`이 `Op`를 구독, `Op`가 다른 `Op`를 구독, `Op`가 `Pub`을 구독
+  * 이 떄 `subscribeOn`을 만나면 해당 부분부터 구독 단계 및 런타임 단계를 다른 쓰레드에서 수행하도록 조절합니다.
 
 ```java
 class SubscribeOn() {
@@ -653,14 +652,14 @@ class SubscribeOn() {
 }
 ```
 
-* doFirst() 함수는 구독 단계가 시작할 때 수행하는 메서드입니다.
-    * 조립 단계를 다시 한번 생각해보면 가장 마지막에 래핑된 Publisher가 노출됩니다.
-    * 그래서 가장 마지막에 있는 doFirst()는 구독 단계가 시작할 때 가장 먼저 수행됩니다.
-* subscribeOn() 위와 아래를 관찰해봅시다.
-    * subscribeOn() 위에 있는 doFirst()는 boundedElastic-1 쓰레드에서 수행됩니다.
-    * subscribeOn() 아래에 있는 doFirst()는 main 쓰레드에서 수행됩니다.
-    * subscribeOn()은 위에 작성되어있는 체이닝 부터 데이터가 방출되는 쓰레드를 조절하게 됩니다.
-* 수행되는 쓰레드가 각기 다를 때 각기 다른 boundElastic 쓰레드에서 수행되는 것을 관찰할 수 있습니다.
+* `doFirst()` 함수는 구독 단계가 시작할 때 수행하는 메서드입니다.
+  * 조립 단계를 다시 한번 생각해보면 가장 마지막에 래핑된 `Publisher`가 노출됩니다.
+  * 그래서 가장 마지막에 있는 doFirst()는 구독 단계가 시작할 때 가장 먼저 수행됩니다.
+* `subscribeOn()` 위와 아래를 관찰해봅시다.
+  * `subscribeOn()` 위에 있는 `doFirst()`는 `boundedElastic-1` 쓰레드에서 수행됩니다.
+  * `subscribeOn()` 아래에 있는 `doFirst()`는 `main` 쓰레드에서 수행됩니다.
+  * `subscribeOn()`은 위에 작성되어있는 체이닝 부터(upstream) 데이터가 방출되는(downstream) 쓰레드를 조절하게 됩니다.
+* 수행되는 쓰레드가 각기 다를 때 각기 다른 `boundElastic` 쓰레드에서 수행되는 것을 관찰할 수 있습니다.
 
 ### multi-subscribeOn
 
@@ -733,15 +732,15 @@ class MultiSubscribeOn {
 }
 ```
 
-* subscribeOn()이 다시 작성된다면 구독 단계에서 수행되는 쓰레드를 다시 재조절할 수 있습니다.
+* `subscribeOn()`이 다시 작성된다면 구독 단계에서 수행되는 쓰레드를 다시 재조절할 수 있습니다.
 * 각 스케쥴러에 의해 수행되는 쓰레드가 달라지기 전까지 하나의 쓰레드에서 동일하게 수행되는 것도 주목하시기 바랍니다.
-    * 한번 boundElastic-1에서 수행되었다면 subscribeOn, publishOn등으로 바꾸지 않는 이상 계속 boundElastic-1에서 수행됩니다.
+  * 한번 `boundElastic-1`에서 수행되었다면 `subscribeOn`, `publishOn`등으로 바꾸지 않는 이상 계속 `boundElastic-1`에서 수행됩니다.
 
 ## publishOn
 
 * ![hello_reactor_03_04.png](/assets/images/hello_reactor_03/hello_reactor_03_04.png)
-* publishOn()은 다운스트림(데이터 전달) 쓰레드를 조절할 수 있습니다.
-    * publishOn()은 다운스트림만 조절됩니다. 업스트림에는 영향을 미치지 못합니다.
+* `publishOn()`은 다운스트림(데이터 전달) 쓰레드를 조절할 수 있습니다.
+  * `publishOn()`은 다운스트림만 조절됩니다. 업스트림에는 영향을 미치지 못합니다.
 
 ```java
 class PublishOn() {
@@ -824,9 +823,9 @@ class PublishOn() {
 }
 ```
 
-* publishOn()은 subscribeOn()보다 명확합니다.
-* publishOn() 그 다음 체이닝에 대해서 데이터 처리를 어떻게 처리할 지 명시할 수 있습니다.
-* subscribeOn()과 마찬가지로 publishOn()도 여러번 쓰게 되면 해당 다음 체이닝부터 처리할 쓰레드가 전환됩니니다.
+* `publishOn()`은 `subscribeOn()`보다 명확합니다.
+* `publishOn()` 그 다음 체이닝에 대해서 데이터 처리를 어떻게 처리할 지 명시할 수 있습니다.
+* `subscribeOn()`과 마찬가지로 `publishOn()`도 여러번 쓰게 되면 해당 다음 체이닝부터 처리할 쓰레드가 전환됩니니다.
 
 ### publishOn & SubscribeOn
 
@@ -873,20 +872,20 @@ class PubOnSubOn {
 }
 ```
 
-* publishOn()과 subscribeOn()을 같이 사용하였을 때 어떻게 동작하는지 확인해봅니다.
-* 참고로 doOnNext는 데이터가 전달될 때 수행되므로 downstream 영역입니다.
+* `publishOn()`과 `subscribeOn()`을 같이 사용하였을 때 어떻게 동작하는지 확인해봅니다.
+* 참고로 `doOnNext`는 데이터가 전달될 때 수행되므로 downstream 영역입니다.
 
-1. 우선 조립단계가 끝나고나서 구독단계에 돌입할 때 subscribeOn()이 적용됩니다.
-2. 따라서 create()는 boundedElastic에서 수행됩니다.
-3. 그 다음 바로 아래 doOnNext도 boundedElastic에서 수행됩니다.
-4. 이제 publishOn()으로 쓰레드를 parallel로 전환합니다.
-5. 그 다음 doOnNext도 parallel에서 수행됩니다.
-6. 마지막으로 subscribe()는 parallel에서 수행됩니다.
+1. 우선 조립단계가 끝나고나서 구독단계에 돌입할 때 `subscribeOn()`이 적용됩니다.
+2. 따라서 `create()`는 `boundedElastic`에서 수행됩니다.
+3. 그 다음 바로 아래 `doOnNext#1`도 `boundedElastic`에서 수행됩니다.
+4. 이제 `publishOn()`으로 쓰레드를 `parallel`로 전환합니다.
+5. 그 다음 `doOnNext#2`는 `parallel`에서 수행됩니다.
+6. 마지막으로 `subscribe()`는 `parallel`에서 수행됩니다.
 
 ## parallel
 
-* 논의할 내용은 Schedulers.parallel()이 아닙니다.
-* parallel()은 데이터를 병렬로 처리하는 연산자입니다.
+* 논의할 내용은 `Schedulers.parallel()`이 아닙니다.
+* `parallel()`은 데이터를 병렬로 처리하는 연산자입니다.
 * 해당 연산자는 하위 스트림에 대하여 흐름 분할, 분할된 흐름 간 균형 조정을 합니다.
 
 ```java
@@ -984,9 +983,9 @@ class Parallel {
 }
 ```
 
-* parallel()을 호출하면 ParallelFlux를 반환합니다.
-* 그 다음 runOn()을 호출하여 publishOn을 내부 Flux에 적용할 수 있습니다.
-* sequential()를 호출하면 ParallelFlux를 Flux로 변환합니다.
+* `parallel()`을 호출하면 `ParallelFlux`를 반환합니다.
+* 그 다음 `runOn()`을 호출하여 `publishOn`을 내부 `Flux`에 적용할 수 있습니다.
+* `sequential()`를 호출하면 `ParallelFlux`를 `Flux`로 변환합니다.
 
 ## interval
 
@@ -1022,6 +1021,6 @@ class Interval {
 }
 ```
 
-* interval은 0부터 주기적으로 1씩 증가하는 데이터를 발행하는 Flux를 생성합니다.
-* 해당 Flux는 기본적으로 Scheduler.parallel()에서 동작합니다.
-    * return interval(period, Schedulers.parallel());
+* `interval`은 0부터 주기적으로 1씩 증가하는 데이터를 발행하는 `Flux`를 생성합니다.
+* 해당 `Flux`는 기본적으로 `Scheduler.parallel()`에서 동작합니다.
+  * `return interval(period, Schedulers.parallel());`

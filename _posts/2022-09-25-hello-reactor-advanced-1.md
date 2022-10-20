@@ -10,7 +10,7 @@ last_modified_at: 2022-09-12T
 
 ## 프로그래밍적으로(programmatically) 데이터를 방출해보기
 
-* generate, create, push는 개발자가 직접 데이터를 방출할 수 있도록 해줍니다.
+* `generate`, `create`, `push는` 개발자가 직접 데이터를 방출할 수 있도록 해줍니다.
 
 ### generate
 
@@ -128,13 +128,13 @@ Received: Something54
 Completed
 ```
 
-* generate 함수는 synchronousSink를 인자로 받습니다. (Consumer<SyncrhonousSink<T>>)
-* 인자로 받은 synchronousSink consumer를 반복해서 호출하게 됩니다.
-* synchronousSink의 next 메소드를 반드시 한번만 호출하여 데이터를 무한적으로 방출할 수 있습니다.
-* synchronousSink의 complete, error 메소드를 호출하면 더 이상 데이터를 방출하지 않습니다.
-* synchronousSink가 데이터를 방출하는 동안 Flux.generate는 블록킹됩니다.
-* next가 무한적으로 데이터를 방출하므로 take를 사용하여 데이터를 제한할 수 있습니다.
-* generate 함수에 처음 상태를 consumer 형태로 전달할 수 있습니다.
+* `generate` 함수는 `synchronousSink`를 인자로 받습니다. (`Consumer<SyncrhonousSink<T>>`)
+* 인자로 받은 `synchronousSink` consumer를 반복해서 호출하게 됩니다.
+* `synchronousSink`의 next 메소드를 반드시 한번만 호출하여 데이터를 무한적으로 방출할 수 있습니다.
+* `synchronousSink`의 complete, error 메소드를 호출하면 더 이상 데이터를 방출하지 않습니다.
+* `synchronousSink`가 데이터를 방출하는 동안 `Flux.generate`는 블록킹됩니다.
+* `next`가 무한적으로 데이터를 방출하므로 `take`를 사용하여 데이터를 제한할 수 있습니다.
+* `generate` 함수에 처음 상태를 consumer 형태로 전달할 수 있습니다.
 
 ### create
 
@@ -233,14 +233,14 @@ Received: Something26
 Completed // <- 3개를 온전히 받고 끝남; 파이프라인도 종료 (fluxSink.next 더 이상 호출 X)
 ```
 
-* create 함수는 FluxSink를 인자로 받습니다. (Consumer<FluxSink<T>>)
-* 인자로 받은 fluxSink consumer는 한번만 호출됩니다.
-* FluxSink의 next 메소드를 호출하여 데이터를 방출할 수 있습니다.
+* `create` 함수는 `FluxSink`를 인자로 받습니다. (`Consumer<FluxSink<T>>`)
+* 인자로 받은 `fluxSink` consumer는 한번만 호출됩니다.
+* `FluxSink`의 `next` 메소드를 호출하여 데이터를 방출할 수 있습니다.
 * complete, error를 따로 호출하지 않아도 됩니다. (complete, error 시그널이 전달이 안될 뿐)
-* generate와 다르게 무한적으로 데이터를 방출하려면 create 안에서 무한히 데이터를 직접 만들어서 방출해야 합니다.
-* generate와 다르게 take를 사용하여 데이터를 제한한다면 create 안에서 cancel 여부를 직접 확인해야 합니다.
-* Flux.create는 Flux.generate와 다르게 오버플로우 처리를 할 수 있는 인자를 추가로 설정할 수 있습니다.
-    * 설정하지 않으면 기본적으로 BUFFER 전략을 사용합니다.
+* `generate`와 다르게 무한적으로 데이터를 방출하려면 `create` 안에서 무한히 데이터를 직접 만들어서 방출해야 합니다.
+* `generate`와 다르게 `take`를 사용하여 데이터를 제한한다면 `create` 안에서 cancel 여부를 직접 확인해야 합니다.
+* `Flux.create`는 `Flux.generate`와 다르게 오버플로우 처리를 할 수 있는 인자를 추가로 설정할 수 있습니다.
+  * 설정하지 않으면 기본적으로 `BUFFER` 전략을 사용합니다.
 
 ### push
 
@@ -299,20 +299,21 @@ create=> Received: Something88:Thread-5
 create=> Received: Something87:Thread-8 // <- create는 10번 호출하면 반드시 10개가 나옵니다.
 ```
 
-* push는 FluxSink를 인자로 받습니다. (Consumer<FluxSink<T>>)
-* push는 Flux.create와 유사하지만 싱글 쓰레드에서만 동작하기를 기대합니다.
-* push가 싱글 쓰레드 처리만 한다는 단점이 있지만, 싱글 쓰레드에 맞춰 더 빠르게 동작하도록 최적화되어 있습니다.
+* `push`는 `FluxSink`를 인자로 받습니다. (`Consumer<FluxSink<T>>`)
+* `push`는 `Flux.create`와 유사하지만 싱글 쓰레드에서만 동작하기를 기대합니다.
+* `push`가 싱글 쓰레드 처리만 한다는 단점이 있지만, 싱글 쓰레드에 맞춰 더 빠르게 동작하도록 최적화되어 있습니다.
 
 # Sink
 
-* Sink는 Subscriber, Publisher의 성격을 동시에 지니고 있습니다.
-    * 그러면 Processor인가요?
-* Processor는 맞는데 Processor의 대안으로 아주 쉽고 유용하게 사용할 수 있습니다. [1]
-    * Processor를 직접 사용하게 된다면 리액티브 스트림 스펙 사양과 관련된 외부 동기화와 관련해서 매우 주의해서 사용하여야 합니다.
-    * 또한 Reactor에서 Processor는 Deprecated 되어있습니다. (직접 사용을 권장하지 않습니다.)
-        * Reactor 3.5.0 버전부터 FluxProcessor, MonoProscessor는 아예 삭제됩니다.
-* 만약 정말 Processor를 사용할 일이 있다면 연산자(Operator)의 조합으로 대체할 수 없는지, Sink를 사용할 수 없는지(generate, create, push) 검토하기를 바랍니다.
-    * 그렇다 하더라도 Reactor 3.5.0 버전부터는 Processor 직접 사용이 매우 제한되므로 사용하지 않는 것이 좋습니다.
+* `Sink`는 `Subscriber`, `Publisher`의 성격을 동시에 지니고 있습니다.
+  * 그러면 `Processor`인가요?
+* `Processor`는 맞는데 `Processor`의 대안으로 아주 쉽고 유용하게 사용할 수 있습니다. [1]
+  * `Processor`를 직접 사용하게 된다면 리액티브 스트림 스펙 사양과 관련된 외부 동기화와 관련해서 매우 주의해서 사용하여야 합니다.
+  * 또한 Reactor에서 `Processor`는 `Deprecated` 되어있습니다. (직접 사용을 권장하지 않습니다.)
+    * Reactor 3.5.0 버전부터 `FluxProcessor`, `MonoProscessor`는 아예 삭제됩니다.
+* 만약 정말 `Processor`를 사용할 일이 있다면 연산자(`Operator`)의 조합으로 대체할 수 없는지, `Sink`를 사용할 수 없는지(`generate`, `create`, `push`) 검토하기를
+  바랍니다.
+  * 그렇다 하더라도 Reactor 3.5.0 버전부터는 `Processor` 직접 사용이 매우 제한되므로 사용하지 않는 것이 좋습니다.
 
 * ![hello_reactor_02_03.png](/assets/images/hello_reactor_02/hello_reactor_02_03.png)
 
@@ -380,11 +381,11 @@ class SinkOne {
 }
 ```
 
-* Sink.One은 하나의 데이터만 방출할 수 있습니다.
-* tryEmitValue는 값 발행 후 EmitResult를 반환합니다.
-    * Sinks.EmitResult Enum을 자세히 확인하시기 바랍니다.
-* emitValue는 값 발행을 하고 나서 만약 실패하였을 때 처리에 대한 콜백을 받습니다.
-    * 콜백의 반환값은 재시도 여부를 결정합니다.
+* `Sink.One`은 하나의 데이터만 방출할 수 있습니다.
+* `tryEmitValue`는 값 발행 후 `EmitResult`를 반환합니다.
+  * `Sinks.EmitResult` Enum을 자세히 확인하시기 바랍니다.
+* `emitValue`는 값 발행을 하고 나서 만약 실패하였을 때 처리에 대한 콜백을 받습니다.
+  * 콜백의 반환값은 재시도 여부를 결정합니다.
 
 ## Sink Many
 
@@ -414,7 +415,7 @@ class SinkManyUnicast {
 }
 ```
 
-* unicast는 하나의 구독자만 받을 수 있습니다.
+* `unicast`는 하나의 구독자만 받을 수 있습니다.
 * 첫번째 구독자가 complete 시그널을 받더라도 두번째 구독자가 구독을 할 수 없습니다.
 
 ### Multicast
@@ -507,16 +508,16 @@ class SinkManyMulticast {
 }
 ```
 
-* multicast는 여러개의 구독자를 허용합니다.
+* `multicast`는 여러개의 구독자를 허용합니다.
 
 #### Multicast Spec [2]
 
 [2]: https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Sinks.MulticastSpec.html
 
-* onBackpressureBuffer
-    * Subscriber가 없을 때 발행된 이벤트들에 대해서 그 다음 구독하는 Subscriber에게 전달합니다.
-* directAllOrNothing, directBestEffort
-    * Subscriber는 자신이 구독한 시점에서부터의 이벤트만 받습니다.
+* `onBackpressureBuffer`
+  * `Subscriber`가 없을 때 발행된 이벤트들에 대해서 그 다음 구독하는 `Subscriber`에게 전달합니다.
+* `directAllOrNothing`, `directBestEffort`
+  * `Subscriber`는 자신이 구독한 시점에서부터의 이벤트만 받습니다.
 
 ```java
 class MulticastSpec {
@@ -572,13 +573,13 @@ class MulticastSpec {
 }
 ```
 
-* directAllOrNothing
-    * 구독자중 하나라도 이벤트를 처리하지 못하는 경우(direct all or nothing; 전부 or 전무) 호출자에게 Sinks.EmitResult.FAIL_OVERFLOW 알림
-    * 모든 구독자의 관점에서는 데이터가 누락되었습니다.
-* directBestEffort
-    * 구독자중 모두 이벤트를 처리하지 못하는 경우 호출자에게 Sinks.EmitResult.FAIL_OVERFLOW 알림
-    * 그렇지 않으면 느린 구독자를 무시하고 최선의 노력으로(best effort) 빠른 구독자에게 요소를 전달합니다.
-    * 느린 구독자의 관점에서 데이터가 누락되었습니다.
+* `directAllOrNothing`
+  * 구독자중 하나라도 이벤트를 처리하지 못하는 경우(direct all or nothing; 전부 or 전무) 호출자에게 `Sinks.EmitResult.FAIL_OVERFLOW` 알림
+  * 모든 구독자의 관점에서는 데이터가 누락되었습니다.
+* `directBestEffort`
+  * 구독자중 모두 이벤트를 처리하지 못하는 경우 호출자에게 `Sinks.EmitResult.FAIL_OVERFLOW` 알림
+  * 그렇지 않으면 느린 구독자를 무시하고 최선의 노력으로(best effort) 빠른 구독자에게 요소를 전달합니다.
+  * 느린 구독자의 관점에서 데이터가 누락되었습니다.
 
 ### Replay
 
@@ -616,8 +617,8 @@ class SinkManyReplay {
 }
 ```
 
-* replay는 여러개의 구독자를 허용하고, 이전에 발행된 이벤트들에 대해서 기억을 해두고 추가로 구독하는 Subscriber에게 전달합니다.
-* all 뿐만 아니라 limit, latest등의 다양한 옵션을 제공하고 limit은 갯수 뿐만 아니라 시간을 지정할 수 도 있습니다.
+* `replay`는 여러개의 구독자를 허용하고, 이전에 발행된 이벤트들에 대해서 기억을 해두고 추가로 구독하는 `Subscriber`에게 전달합니다.
+* `all` 뿐만 아니라 `limit`, `latest`등의 다양한 옵션을 제공하고 `limit`은 갯수 뿐만 아니라 시간을 지정할 수 도 있습니다.
 
 ### Sink가 가지고 있는 메서드들은 쓰레드-세이프 하지 않습니다.
 
@@ -640,7 +641,7 @@ class SinkIsNotThreadSafe() {
 }
 ```
 
-* Sink가 가지는 메소드들은 쓰레드-세이프 하지 않기 때문에 여러개의 쓰레드에서 동시에 호출하면 문제가 발생할 수 있습니다.
+* `Sink`가 가지는 메소드들은 쓰레드-세이프 하지 않기 때문에 여러개의 쓰레드에서 동시에 호출하면 문제가 발생할 수 있습니다.
 
 ```java
 class SinkIsNotThreadSafeFix() {
@@ -666,8 +667,8 @@ class SinkIsNotThreadSafeFix() {
 }
 ```
 
-* sink의 emitNext를 이용하여 삽입 실패시 재시도 하게끔 수정한 코드
-* 실패 signal은 onNext, Sinks.EmitResult는 FAIL_NON_SERIALIZED 입니다.
+* `sink`의 `emitNext`를 이용하여 삽입 실패시 재시도 하게끔 수정한 코드
+* 실패 signal은 `onNext`, `Sinks.EmitResult`는 `FAIL_NON_SERIALIZED` 입니다.
 
 # 리액티브 스트림 수명 주기
 
@@ -705,7 +706,7 @@ class ReactorNoChain {
 ```
 
 * 만약 체이닝 API를 사용하지 않는다고 생각해봅시다.
-* 위의 코드는 Publisher는 다음과 같이 조립됩니다. (수도 코드)
+* 위의 코드는 `Publisher`는 다음과 같이 조립됩니다. (수도 코드)
 
 ```text
 FluxFilter(
@@ -715,13 +716,13 @@ FluxFilter(
 )
 ```
 
-* Just -> Map -> Filter 순서로 연산자를 적용하면 Filter -> Map -> Just 순으로 감싸지는 것을 확인할 수 있습니다.
+* `Just` -> `Map` -> `Filter` 순서로 연산자를 적용하면 `Filter` -> `Map` -> `Just` 순으로 감싸지는 것을 확인할 수 있습니다.
 
 ## 구독 단계 (Subscription time)
 
-* 특정 Publisher를 구독(subscribe)하면 발생합니다.
-* 위 조립 단계에서 가장 마지막 단계인 filterFlux를 구독한다고 생각합시다.
-* 구독 단계 동안 Subscriber 체인을 통해 Subscriber가 전파되는 방식을 관찰해봅시다.
+* 특정 `Publisher`를 구독(`subscribe`)하면 발생합니다.
+* 위 조립 단계에서 가장 마지막 단계인 `filterFlux`를 구독한다고 생각합시다.
+* 구독 단계 동안 `Subscriber` 체인을 통해 `Subscriber`가 전파되는 방식을 관찰해봅시다.
 
 ```text
 filterFlux.subscribe(new Subscriber) {
@@ -737,7 +738,7 @@ filterFlux.subscribe(new Subscriber) {
 }
 ```
 
-* 위 수도 코드에서 Subscriber 형태만 살펴봅시다.
+* 위 수도 코드에서 `Subscriber` 형태만 살펴봅시다.
 
 ```text
 JustSubscriber(
@@ -749,13 +750,13 @@ JustSubscriber(
 )
 ```
 
-* 조립 단계에서는 Just는 가장 내부에 있었지만 구독 단계에서는 가장 바깥에 존재합니다. (조립 단계와는 역피마리드 형태)
+* 조립 단계에서는 `Just`는 가장 내부에 있었지만 구독 단계에서는 가장 바깥에 존재합니다. (조립 단계와는 역피마리드 형태)
 
 ## 런타임(실행) 단계 (Runtime)
 
-* 이 단계에서는 Publisher와 Subscriber 간에 실제 신호가 교환됩니다.
-* 둘 간의 첫 신호는 onSubscribe(), request() 시그널입니다.
-* onSubscribe()가 호출되는 과정을 수도 코드로 살펴봅시다.
+* 이 단계에서는 `Publisher`와 `Subscriber` 간에 실제 신호가 교환됩니다.
+* 둘 간의 첫 신호는 `onSubscribe()`, `request()` 시그널입니다.
+* `onSubscribe()`가 호출되는 과정을 수도 코드로 살펴봅시다.
 
 ```text
 JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onSubscribe(new Subscription()) {
@@ -772,7 +773,7 @@ JustSubscriber(MapSubscriber(FilterSubscriber(Subscriber))).onSubscribe(new Subs
 }
 ```
 
-* 위 수도 코드에서 Subscription 형태만 살펴봅시다.
+* 위 수도 코드에서 `Subscription` 형태만 살펴봅시다.
 
 ```text
 FilterSubscription(
@@ -785,7 +786,7 @@ FilterSubscription(
 ```
 
 * 조립 단계와 피라미드 구조가 유사합니다. (구독 단계와는 역피라미드 형태)
-* 이제 실제 데이터를 요청하는 request() 시그널을 살펴봅시다. (수도 코드)
+* 이제 실제 데이터를 요청하는 `request()` 시그널을 살펴봅시다. (수도 코드)
 
 ```text
 FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) {
@@ -799,7 +800,7 @@ FilterSubscription(MapSubscription(JustSubscription(Subscription))).request(10) 
 }
 ```
 
-* 실제 Subscriber에게 데이터가 전달되는 과정을 살펴봅시다. (수도 코드)
+* 실제 `Subscriber`에게 데이터가 전달되는 과정을 살펴봅시다. (수도 코드)
 
 ```text
 Subscription.request(10) {
@@ -822,7 +823,7 @@ Subscription.request(10) {
 }
 ```
 
-* 데이터는 소스로부터 각 Subscriber 체인을 거쳐 단계마다 다른 기능을 수행하게 됩니다.
-    * MapSubscriber는 데이터를 변환합니다.
-    * FilterSubscriber는 데이터를 걸러냅니다. (걸러내지 않으면 다음 Subscriber에게 전달, 걸러낸다면 추가 요청)
+* 데이터는 소스로부터 각 `Subscriber` 체인을 거쳐 단계마다 다른 기능을 수행하게 됩니다.
+  * `MapSubscriber`는 데이터를 변환합니다.
+  * `FilterSubscriber`는 데이터를 걸러냅니다. (걸러내지 않으면 다음 `Subscriber`에게 전달, 걸러낸다면 추가 요청)
 * 위와 같은 조립 단계, 구독 단계, 런타임을 거쳐서 데이터가 전달되는 과정을 통해 리액티브 스트림의 동작 방식을 이해할 수 있기를 바랍니다.
