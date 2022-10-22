@@ -533,6 +533,9 @@ class ContextChange {
 * 위의 예제에서 보듯이 top 해당 부분에서 사용할 수 있는 `Context`를 살펴보면 전체 `Context`가 포함되어있습니다.
 * middle에서는 정의한 컨텍스트와 bottom에서 정의한 컨텍스트가 포함되어있습니다.
 * 가장 마지막에 있는 컨텍스트는 비어있는 것을 확인할 수 있습니다.
+* 참고로 컨텍스트에는 키/값 개수에는 제한이 따로 없지만 5개 이하로만 구성하기를 권장합니다. [31번줄][1]
+
+[1]: https://github.com/reactor/reactor-core/blob/main/reactor-core/src/main/java/reactor/util/context/Context.java
 
 ### Context authentication example
 
