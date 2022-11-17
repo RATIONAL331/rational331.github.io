@@ -3,7 +3,7 @@ title:  "(리뷰) 도커 교과서 - 길벗출판사"
 excerpt: "한 시간씩 따라하다 보면 이해가 된다."
 category: "review"
 
-last_modified_at: 2022-11-16
+last_modified_at: 2022-11-16T
 ---
 
 # 표지
