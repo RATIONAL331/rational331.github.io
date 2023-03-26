@@ -40,6 +40,7 @@ last_modified_at: 2023-03-26T
     * 5점 : 필수 기능을 모두 갖추었으며 에러없이 워킹하는 것은 물론이고, 추가 기능까지 담은 프로덕트 런칭 가능
 
 * 김령진 : 3점 / 5점
+* https://github.com/RATIONAL331/AwesomeProject
 
 ### 회고록(필수 X)
 
