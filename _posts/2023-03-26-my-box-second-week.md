@@ -55,3 +55,8 @@ last_modified_at: 2023-03-26T
     * 폴더 다운로드 기능을 구현하지 못함
     * 테스트 코드가 없음
     * 부하 테스트를 하지 못함
+
+# 결과
+* https://thoughtful-arch-8c2.notion.site/11-MYBOX-c89427cde45b40e2a1bb44dee496eee5
+* 어쩌다 1등;;; 
+* 멘토님이 꼼꼼하게 봐주셔서 좋았다.
